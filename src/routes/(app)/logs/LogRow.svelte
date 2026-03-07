@@ -48,15 +48,14 @@
 		if (!raw) return '';
 		const date = new Date(raw as string | number);
 		if (isNaN(date.getTime())) return String(raw);
-		return date.toLocaleString('en-US', {
-			month: 'short',
-			day: '2-digit',
-			hour: '2-digit',
-			minute: '2-digit',
-			second: '2-digit',
-			fractionalSecondDigits: 3,
-			hour12: false
-		});
+		const y = date.getFullYear();
+		const mo = String(date.getMonth() + 1).padStart(2, '0');
+		const d = String(date.getDate()).padStart(2, '0');
+		const h = String(date.getHours()).padStart(2, '0');
+		const mi = String(date.getMinutes()).padStart(2, '0');
+		const s = String(date.getSeconds()).padStart(2, '0');
+		const ms = String(date.getMilliseconds()).padStart(3, '0');
+		return `${y}-${mo}-${d} ${h}:${mi}:${s}.${ms}`;
 	}
 
 	function extractMessage(doc: Record<string, unknown>): string {
@@ -77,19 +76,24 @@
 		return message;
 	}
 
+	function isError(sev: string): boolean {
+		return sev === 'error' || sev === 'fatal' || sev === 'critical';
+	}
+
 	const severity = $derived(extractSeverity(hit));
 </script>
 
 <div
-	class="flex items-start gap-2 border-b border-base-300/50 px-3 py-1.5 font-mono text-xs hover:bg-base-200/50"
+	class="flex items-stretch border-b border-base-content/5 font-mono text-[13px] leading-[22px] hover:bg-white/[0.03]"
 >
-	<span class="w-1 shrink-0 self-stretch rounded-full {severityColor(severity)}"></span>
-	<span class="w-14 shrink-0 text-base-content/70">{severityLabel(severity)}</span>
-	<span class="w-44 shrink-0 text-base-content/50">{extractTimestamp(hit)}</span>
+	<div class="w-1 shrink-0 rounded-full {severityColor(severity)}"></div>
+	<span class="shrink-0 py-px pl-3 text-base-content/40">{extractTimestamp(hit)}</span>
 	{#each extraFields as field (field)}
-		<span class="w-28 shrink-0 truncate text-base-content/60">{hit[field] ?? ''}</span>
+		<span class="shrink-0 truncate py-px pl-2">{hit[field] ?? ''}</span>
 	{/each}
-	<span class="text-base-content/90 {wrapMode !== 'none' ? 'min-w-0 whitespace-pre-wrap break-all' : 'whitespace-nowrap'}"
-		>{formatContent(hit, wrapMode)}</span
+	<span
+		class="py-px pl-2 text-base-content/80 {wrapMode !== 'none'
+			? 'min-w-0 break-all whitespace-pre-wrap'
+			: 'whitespace-nowrap'}">{formatContent(hit, wrapMode)}</span
 	>
 </div>
