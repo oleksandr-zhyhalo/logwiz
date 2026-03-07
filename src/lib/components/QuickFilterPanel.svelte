@@ -17,9 +17,10 @@
 	let collapsed = $state(false);
 	let openSections = new SvelteSet<string>();
 
-	// Open first section by default
+	// Open first section by default, reset on fields change
 	$effect(() => {
-		if (fields.length > 0 && openSections.size === 0) {
+		if (fields.length > 0) {
+			openSections.clear();
 			openSections.add(fields[0]);
 		}
 	});

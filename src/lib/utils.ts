@@ -20,6 +20,13 @@ export function normalizeQuickwitUrl(url: string): string {
 	return url.replace(/\/api\/v1\/?$/, '');
 }
 
+function escapeFilterValue(value: string): string {
+	if (/[\s:()[\]{}!+\-~^"\\*?/&|]/.test(value)) {
+		return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+	}
+	return value;
+}
+
 /**
  * Build a Lucene filter clause from active quick filters.
  * E.g. { level: ["error", "warn"], service: ["api"] }
@@ -30,9 +37,9 @@ export function buildFilterClause(filters: Record<string, string[]>): string {
 	for (const [field, values] of Object.entries(filters)) {
 		if (!values.length) continue;
 		if (values.length === 1) {
-			clauses.push(`${field}:${values[0]}`);
+			clauses.push(`${field}:${escapeFilterValue(values[0])}`);
 		} else {
-			clauses.push(`(${values.map((v) => `${field}:${v}`).join(' OR ')})`);
+			clauses.push(`(${values.map((v) => `${field}:${escapeFilterValue(v)}`).join(' OR ')})`);
 		}
 	}
 	return clauses.join(' AND ');

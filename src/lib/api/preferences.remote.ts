@@ -55,36 +55,44 @@ export const getPreference = command(getPreferenceSchema, async (data) => {
 	};
 });
 
+async function upsertPreference(
+	userId: string,
+	sourceId: number | null,
+	set: Partial<{ displayFields: string[]; quickFilterFields: string[] }>
+) {
+	if (sourceId === null) {
+		// NULL != NULL in PostgreSQL, so ON CONFLICT won't match. Handle manually.
+		const [existing] = await db
+			.select()
+			.from(userPreference)
+			.where(and(eq(userPreference.userId, userId), isNull(userPreference.sourceId)));
+		if (existing) {
+			await db
+				.update(userPreference)
+				.set({ ...set, updatedAt: new Date() })
+				.where(eq(userPreference.id, existing.id));
+		} else {
+			await db.insert(userPreference).values({ userId, sourceId: null, ...set });
+		}
+	} else {
+		await db
+			.insert(userPreference)
+			.values({ userId, sourceId, ...set })
+			.onConflictDoUpdate({
+				target: [userPreference.userId, userPreference.sourceId],
+				set: { ...set, updatedAt: new Date() }
+			});
+	}
+}
+
 export const saveDisplayFields = command(saveDisplayFieldsSchema, async (data) => {
 	const user = requireUser();
-
-	await db
-		.insert(userPreference)
-		.values({
-			userId: user.id,
-			sourceId: data.sourceId,
-			displayFields: data.fields
-		})
-		.onConflictDoUpdate({
-			target: [userPreference.userId, userPreference.sourceId],
-			set: { displayFields: data.fields, updatedAt: new Date() }
-		});
+	await upsertPreference(user.id, data.sourceId, { displayFields: data.fields });
 });
 
 export const saveQuickFilterFields = command(saveQuickFilterFieldsSchema, async (data) => {
 	const user = requireUser();
-
-	await db
-		.insert(userPreference)
-		.values({
-			userId: user.id,
-			sourceId: data.sourceId,
-			quickFilterFields: data.fields
-		})
-		.onConflictDoUpdate({
-			target: [userPreference.userId, userPreference.sourceId],
-			set: { quickFilterFields: data.fields, updatedAt: new Date() }
-		});
+	await upsertPreference(user.id, data.sourceId, { quickFilterFields: data.fields });
 });
 
 export const deletePreference = command(deletePreferenceSchema, async (data) => {
