@@ -22,27 +22,37 @@ export const searchLogs = command(searchLogsSchema, async (data) => {
 	const client = new QuickwitClient(endpoint);
 	const index = client.index(src.indexName);
 
-	const now = Math.floor(Date.now() / 1000);
-	const rangeSeconds: Record<string, number> = {
-		'15m': 15 * 60,
-		'1h': 60 * 60,
-		'6h': 6 * 60 * 60,
-		'24h': 24 * 60 * 60,
-		'7d': 7 * 24 * 60 * 60
-	};
-	const startTimestamp = now - (rangeSeconds[data.timeRange] ?? 900);
+	let startTs: number;
+	let endTs: number;
+
+	if (data.startTimestamp !== undefined && data.endTimestamp !== undefined) {
+		startTs = data.startTimestamp;
+		endTs = data.endTimestamp;
+	} else {
+		endTs = Math.floor(Date.now() / 1000);
+		const rangeSeconds: Record<string, number> = {
+			'15m': 15 * 60,
+			'1h': 60 * 60,
+			'6h': 6 * 60 * 60,
+			'24h': 24 * 60 * 60,
+			'7d': 7 * 24 * 60 * 60
+		};
+		startTs = endTs - (rangeSeconds[data.timeRange] ?? 900);
+	}
 
 	const query = index
 		.query(data.query || '*')
-		.timeRange(startTimestamp, now)
+		.timeRange(startTs, endTs)
 		.limit(data.limit)
 		.offset(data.offset)
-		.sortBy('+timestamp');
+		.sortBy(`+${src.timestampField}`);
 
 	const result = await index.search(query);
 
 	return {
 		hits: result.hits,
-		numHits: result.num_hits
+		numHits: result.num_hits,
+		startTimestamp: startTs,
+		endTimestamp: endTs
 	};
 });

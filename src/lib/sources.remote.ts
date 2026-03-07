@@ -3,6 +3,7 @@ import { error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { source } from '$lib/server/db/schema';
 import { eq, desc } from 'drizzle-orm';
+import { QuickwitClient } from 'quickwit-js';
 import {
 	sourceSchema,
 	sourceIdSchema,
@@ -53,12 +54,9 @@ export const deleteSource = command(sourceIdSchema, async (id) => {
 export const testSourceConnection = command(testConnectionSchema, async (data) => {
 	requireAuth();
 	try {
-		const url = new URL(data.url);
-		const response = await fetch(`${url.origin}${url.pathname.replace(/\/$/, '')}/indexes/${data.indexName}`);
-		if (!response.ok) {
-			const text = await response.text();
-			return { success: false as const, error: `HTTP ${response.status}: ${text}` };
-		}
+		const endpoint = data.url.replace(/\/api\/v1\/?$/, '');
+		const client = new QuickwitClient(endpoint);
+		await client.getIndex(data.indexName);
 		return { success: true as const };
 	} catch (e) {
 		return {

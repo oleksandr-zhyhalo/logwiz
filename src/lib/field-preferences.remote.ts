@@ -53,30 +53,19 @@ export const getFieldPreference = command(getFieldPreferenceSchema, async (data)
 export const saveFieldPreference = command(saveFieldPreferenceSchema, async (data) => {
 	const user = requireUser();
 
-	const condition = data.sourceId !== null
-		? and(eq(userFieldPreference.userId, user.id), eq(userFieldPreference.sourceId, data.sourceId))
-		: and(eq(userFieldPreference.userId, user.id), isNull(userFieldPreference.sourceId));
-
-	const [existing] = await db.select().from(userFieldPreference).where(condition);
-
-	if (existing) {
-		const [updated] = await db
-			.update(userFieldPreference)
-			.set({ fields: data.fields, updatedAt: new Date() })
-			.where(eq(userFieldPreference.id, existing.id))
-			.returning();
-		return updated;
-	}
-
-	const [created] = await db
+	const [result] = await db
 		.insert(userFieldPreference)
 		.values({
 			userId: user.id,
 			sourceId: data.sourceId,
 			fields: data.fields
 		})
+		.onConflictDoUpdate({
+			target: [userFieldPreference.userId, userFieldPreference.sourceId],
+			set: { fields: data.fields, updatedAt: new Date() }
+		})
 		.returning();
-	return created;
+	return result;
 });
 
 export const deleteFieldPreference = command(deleteFieldPreferenceSchema, async (data) => {

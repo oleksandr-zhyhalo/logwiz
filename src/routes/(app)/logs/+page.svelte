@@ -23,6 +23,8 @@
 	let loading = $state(false);
 	let errorMessage = $state('');
 	let hasSearched = $state(false);
+	let searchStartTimestamp = $state<number | undefined>(undefined);
+	let searchEndTimestamp = $state<number | undefined>(undefined);
 	let wrapMode = $state<'none' | 'wrap' | 'pretty'>('none');
 	let selectedSource = $derived(sources.find((s) => s.id === selectedSourceId));
 
@@ -44,19 +46,34 @@
 	let extraFieldNames = $derived(activeFields.map((f) => f.name));
 
 	const MAX_COLUMN_CH = 60;
-	let columnWidths = $derived.by(() => {
-		const widths: Record<string, number> = {};
-		for (const field of extraFieldNames) {
-			let max = field.length;
-			for (const log of logs) {
+	let _maxRawWidths: Record<string, number> = {};
+	let columnWidths = $state<Record<string, number>>({});
+
+	function updateColumnWidths(newLogs: Record<string, unknown>[], fields: string[], reset = false) {
+		if (reset) _maxRawWidths = {};
+
+		for (const field of fields) {
+			if (!(field in _maxRawWidths)) _maxRawWidths[field] = field.length;
+			for (const log of newLogs) {
 				const val = log[field];
 				if (val !== undefined && val !== null) {
-					max = Math.max(max, String(val).length);
+					_maxRawWidths[field] = Math.max(_maxRawWidths[field], String(val).length);
 				}
 			}
-			widths[field] = Math.min(max + 2, MAX_COLUMN_CH);
 		}
-		return widths;
+
+		const widths: Record<string, number> = {};
+		for (const field of fields) {
+			widths[field] = Math.min((_maxRawWidths[field] ?? field.length) + 2, MAX_COLUMN_CH);
+		}
+		columnWidths = widths;
+	}
+
+	$effect(() => {
+		const fields = extraFieldNames;
+		untrack(() => {
+			updateColumnWidths(logs, fields);
+		});
 	});
 
 	let scrollElement = $state<HTMLDivElement | null>(null);
@@ -146,13 +163,20 @@
 				query: queryText || '*',
 				timeRange,
 				offset: append ? logs.length : 0,
-				limit: BATCH_SIZE
+				limit: BATCH_SIZE,
+				startTimestamp: append ? searchStartTimestamp : undefined,
+				endTimestamp: append ? searchEndTimestamp : undefined
 			});
+
+			searchStartTimestamp = result.startTimestamp;
+			searchEndTimestamp = result.endTimestamp;
 
 			if (append) {
 				logs = [...logs, ...result.hits];
+				updateColumnWidths(result.hits, extraFieldNames);
 			} else {
 				logs = result.hits;
+				updateColumnWidths(result.hits, extraFieldNames, true);
 				$virtualizer.scrollToIndex(0);
 			}
 			numHits = result.numHits;
