@@ -50,31 +50,10 @@ export const deleteSource = command(sourceIdSchema, async (id) => {
 	return deleted;
 });
 
-const BLOCKED_HOSTNAMES = new Set(['localhost', '0.0.0.0', '[::1]']);
-const PRIVATE_IP_PATTERNS = [
-	/^127\./,
-	/^10\./,
-	/^172\.(1[6-9]|2\d|3[01])\./,
-	/^192\.168\./,
-	/^169\.254\./
-];
-
-function validateFetchUrl(raw: string): URL {
-	const parsed = new URL(raw);
-	if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-		throw new Error('Only HTTP(S) URLs are allowed');
-	}
-	const hostname = parsed.hostname.replace(/^\[|\]$/g, '');
-	if (BLOCKED_HOSTNAMES.has(hostname) || PRIVATE_IP_PATTERNS.some((p) => p.test(hostname))) {
-		throw new Error('URLs pointing to internal/private addresses are not allowed');
-	}
-	return parsed;
-}
-
 export const testSourceConnection = command(testConnectionSchema, async (data) => {
 	requireAuth();
 	try {
-		const url = validateFetchUrl(data.url);
+		const url = new URL(data.url);
 		const response = await fetch(`${url.origin}${url.pathname.replace(/\/$/, '')}/indexes/${data.indexName}`);
 		if (!response.ok) {
 			const text = await response.text();
