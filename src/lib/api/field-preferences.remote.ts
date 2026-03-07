@@ -1,4 +1,4 @@
-import { command, getRequestEvent } from '$app/server';
+import { command } from '$app/server';
 import { error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { userFieldPreference, source } from '$lib/server/db/schema';
@@ -10,14 +10,8 @@ import {
 	deleteFieldPreferenceSchema,
 	getIndexFieldsSchema
 } from '$lib/schemas/field-preference';
-
-function requireUser() {
-	const event = getRequestEvent();
-	if (!event.locals.user) {
-		error(401, 'Unauthorized');
-	}
-	return event.locals.user;
-}
+import { requireUser } from '$lib/middleware/auth';
+import { normalizeQuickwitUrl } from '$lib/utils';
 
 export const getFieldPreference = command(getFieldPreferenceSchema, async (data) => {
 	const user = requireUser();
@@ -86,7 +80,7 @@ export const getIndexFields = command(getIndexFieldsSchema, async (data) => {
 	const [src] = await db.select().from(source).where(eq(source.id, data.sourceId));
 	if (!src) error(404, 'Source not found');
 
-	const endpoint = src.url.replace(/\/api\/v1\/?$/, '');
+	const endpoint = normalizeQuickwitUrl(src.url);
 	const client = new QuickwitClient(endpoint);
 	const metadata = await client.getIndex(src.indexName);
 

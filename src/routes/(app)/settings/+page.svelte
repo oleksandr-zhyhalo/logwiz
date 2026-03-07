@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { getSources, createSource } from '$lib/sources.remote';
-	import { getFieldPreference, saveFieldPreference, getIndexFields } from '$lib/field-preferences.remote';
+	import { getSources, createSource } from '$lib/api/sources.remote';
+	import { getFieldPreference, saveFieldPreference, getIndexFields } from '$lib/api/field-preferences.remote';
 	import SourceCard from './SourceCard.svelte';
-	import FieldPanel from '../logs/FieldPanel.svelte';
+	import FieldPanel from '$lib/components/FieldPanel.svelte';
 	import type { Source } from '$lib/types';
 
 	let sources = $state<Source[]>([]);

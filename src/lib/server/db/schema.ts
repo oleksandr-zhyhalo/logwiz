@@ -1,12 +1,6 @@
 import { pgTable, serial, integer, text, timestamp, jsonb, unique } from 'drizzle-orm/pg-core';
 import { user } from './auth.schema';
 
-export const task = pgTable('task', {
-	id: serial('id').primaryKey(),
-	title: text('title').notNull(),
-	priority: integer('priority').notNull().default(1)
-});
-
 export const source = pgTable('source', {
 	id: serial('id').primaryKey(),
 	name: text('name').notNull(),

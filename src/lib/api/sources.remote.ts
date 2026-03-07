@@ -1,4 +1,4 @@
-import { query, command, getRequestEvent } from '$app/server';
+import { query, command } from '$app/server';
 import { error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { source } from '$lib/server/db/schema';
@@ -10,28 +10,23 @@ import {
 	updateSourceSchema,
 	testConnectionSchema
 } from '$lib/schemas/source';
-
-function requireAuth() {
-	const event = getRequestEvent();
-	if (!event.locals.user) {
-		error(401, 'Unauthorized');
-	}
-}
+import { requireUser } from '$lib/middleware/auth';
+import { normalizeQuickwitUrl } from '$lib/utils';
 
 export const getSources = query(async () => {
-	requireAuth();
+	requireUser();
 	return db.select().from(source).orderBy(desc(source.createdAt));
 });
 
 export const createSource = command(sourceSchema, async (data) => {
-	requireAuth();
+	requireUser();
 	const [created] = await db.insert(source).values(data).returning();
 	await getSources().refresh();
 	return created;
 });
 
 export const updateSource = command(updateSourceSchema, async (data) => {
-	requireAuth();
+	requireUser();
 	const { id, ...values } = data;
 	const [updated] = await db
 		.update(source)
@@ -44,7 +39,7 @@ export const updateSource = command(updateSourceSchema, async (data) => {
 });
 
 export const deleteSource = command(sourceIdSchema, async (id) => {
-	requireAuth();
+	requireUser();
 	const [deleted] = await db.delete(source).where(eq(source.id, id)).returning();
 	if (!deleted) error(404, 'Source not found');
 	await getSources().refresh();
@@ -52,9 +47,9 @@ export const deleteSource = command(sourceIdSchema, async (id) => {
 });
 
 export const testSourceConnection = command(testConnectionSchema, async (data) => {
-	requireAuth();
+	requireUser();
 	try {
-		const endpoint = data.url.replace(/\/api\/v1\/?$/, '');
+		const endpoint = normalizeQuickwitUrl(data.url);
 		const client = new QuickwitClient(endpoint);
 		await client.getIndex(data.indexName);
 		return { success: true as const };

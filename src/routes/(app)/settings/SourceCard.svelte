@@ -4,7 +4,7 @@
 		updateSource,
 		deleteSource,
 		testSourceConnection
-	} from '$lib/sources.remote';
+	} from '$lib/api/sources.remote';
 	import type { Source } from '$lib/types';
 
 	let {

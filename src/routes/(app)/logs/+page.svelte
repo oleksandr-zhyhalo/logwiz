@@ -1,17 +1,18 @@
 <script lang="ts">
-	import { getSources } from '$lib/sources.remote';
-	import { searchLogs } from '$lib/logs.remote';
+	import { getSources } from '$lib/api/sources.remote';
+	import { searchLogs } from '$lib/api/logs.remote';
 	import {
 		getFieldPreference,
 		saveFieldPreference,
 		deleteFieldPreference,
 		getIndexFields
-	} from '$lib/field-preferences.remote';
+	} from '$lib/api/field-preferences.remote';
 	import { untrack } from 'svelte';
+	import { getNestedValue, formatFieldValue } from '$lib/utils';
 	import type { Source } from '$lib/types';
 	import TimeRangeBar from './TimeRangeBar.svelte';
 	import LogRow from './LogRow.svelte';
-	import FieldPanel from './FieldPanel.svelte';
+	import FieldPanel from '$lib/components/FieldPanel.svelte';
 
 	let sources = $state<Source[]>([]);
 	let selectedSourceId = $state<number | null>(null);
@@ -47,21 +48,6 @@
 	const MAX_COLUMN_CH = 60;
 	let _maxRawWidths: Record<string, number> = {};
 	let columnWidths = $state<Record<string, number>>({});
-
-	function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
-		let current: unknown = obj;
-		for (const key of path.split('.')) {
-			if (current === null || current === undefined || typeof current !== 'object') return undefined;
-			current = (current as Record<string, unknown>)[key];
-		}
-		return current;
-	}
-
-	function formatFieldValue(val: unknown): string {
-		if (val === undefined || val === null) return '';
-		if (typeof val === 'object') return JSON.stringify(val);
-		return String(val);
-	}
 
 	function updateColumnWidths(newLogs: Record<string, unknown>[], fields: string[], reset = false) {
 		if (reset) _maxRawWidths = {};

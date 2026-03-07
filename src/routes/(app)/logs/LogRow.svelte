@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getNestedValue, formatFieldValue } from '$lib/utils';
 	import JsonHighlight from './JsonHighlight.svelte';
 
 	let {
@@ -18,21 +19,6 @@
 		extraFields?: string[];
 		columnWidths?: Record<string, number>;
 	} = $props();
-
-	function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
-		let current: unknown = obj;
-		for (const key of path.split('.')) {
-			if (current === null || current === undefined || typeof current !== 'object') return undefined;
-			current = (current as Record<string, unknown>)[key];
-		}
-		return current;
-	}
-
-	function formatFieldValue(val: unknown): string {
-		if (val === undefined || val === null) return '';
-		if (typeof val === 'object') return JSON.stringify(val);
-		return String(val);
-	}
 
 	function extractSeverity(doc: Record<string, unknown>): string {
 		const raw = (doc[levelField] ?? 'unknown') as string;

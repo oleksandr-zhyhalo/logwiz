@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import { page } from '$app/state';
-	import { signOut } from '$lib/auth.remote';
+	import { signOut } from '$lib/api/auth.remote';
 
 	let { children } = $props();
 

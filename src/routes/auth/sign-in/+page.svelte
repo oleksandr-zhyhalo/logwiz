@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { signIn } from '$lib/auth.remote';
+	import { signIn } from '$lib/api/auth.remote';
 	import { signInSchema } from '$lib/schemas/auth';
 </script>
 

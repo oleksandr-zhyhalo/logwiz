@@ -1,24 +1,22 @@
-import { command, getRequestEvent } from '$app/server';
+import { command } from '$app/server';
 import { error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { source } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { searchLogsSchema } from '$lib/schemas/logs';
 import { QuickwitClient } from 'quickwit-js';
+import { requireUser } from '$lib/middleware/auth';
+import { normalizeQuickwitUrl } from '$lib/utils';
 
 export const searchLogs = command(searchLogsSchema, async (data) => {
-	const event = getRequestEvent();
-	if (!event.locals.user) {
-		error(401, 'Unauthorized');
-	}
+	requireUser();
 
 	const [src] = await db.select().from(source).where(eq(source.id, data.sourceId));
 	if (!src) {
 		error(404, 'Source not found');
 	}
 
-	// QuickwitClient adds /api/v1 internally, so strip it if present
-	const endpoint = src.url.replace(/\/api\/v1\/?$/, '');
+	const endpoint = normalizeQuickwitUrl(src.url);
 	const client = new QuickwitClient(endpoint);
 	const index = client.index(src.indexName);
 
