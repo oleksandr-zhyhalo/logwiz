@@ -15,6 +15,7 @@
 	let errorMessage = $state('');
 	let hasSearched = $state(false);
 	let wrapMode = $state<'none' | 'wrap' | 'pretty'>('none');
+	let selectedSource = $derived(sources.find((s) => s.id === selectedSourceId));
 
 	const BATCH_SIZE = 50;
 
@@ -69,8 +70,12 @@
 		}
 	}
 
+	let lastScrollTop = 0;
+
 	function handleScroll(event: Event) {
 		const target = event.target as HTMLElement;
+		if (target.scrollTop === lastScrollTop) return;
+		lastScrollTop = target.scrollTop;
 		const nearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 200;
 		if (nearBottom && !loading && logs.length < numHits) {
 			search(true);
@@ -144,7 +149,13 @@
 				</div>
 			{:else}
 				{#each logs as hit, i (i)}
-					<LogRow {hit} {wrapMode} />
+					<LogRow
+					{hit}
+					{wrapMode}
+					levelField={selectedSource?.levelField ?? 'level'}
+					timestampField={selectedSource?.timestampField ?? 'timestamp'}
+					messageField={selectedSource?.messageField ?? 'message'}
+				/>
 				{/each}
 				{#if loading}
 					<div class="flex justify-center py-4">

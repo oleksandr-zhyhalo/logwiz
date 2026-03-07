@@ -1,8 +1,20 @@
 <script lang="ts">
-	let { hit, wrapMode }: { hit: Record<string, unknown>; wrapMode: 'none' | 'wrap' | 'pretty' } = $props();
+	let {
+		hit,
+		wrapMode,
+		levelField = 'level',
+		timestampField = 'timestamp',
+		messageField = 'message'
+	}: {
+		hit: Record<string, unknown>;
+		wrapMode: 'none' | 'wrap' | 'pretty';
+		levelField?: string;
+		timestampField?: string;
+		messageField?: string;
+	} = $props();
 
 	function extractSeverity(doc: Record<string, unknown>): string {
-		const raw = (doc.severity ?? doc.level ?? doc['log.level'] ?? 'unknown') as string;
+		const raw = (doc[levelField] ?? 'unknown') as string;
 		return raw.toString().toLowerCase();
 	}
 
@@ -30,7 +42,7 @@
 	}
 
 	function extractTimestamp(doc: Record<string, unknown>): string {
-		const raw = doc.timestamp ?? doc['@timestamp'] ?? doc.datetime ?? doc.time;
+		const raw = doc[timestampField];
 		if (!raw) return '';
 		const date = new Date(raw as string | number);
 		if (isNaN(date.getTime())) return String(raw);
@@ -45,8 +57,15 @@
 		});
 	}
 
+	function extractMessage(doc: Record<string, unknown>): string {
+		const raw = doc[messageField];
+		if (raw !== undefined && raw !== null) return String(raw);
+		return JSON.stringify(doc);
+	}
+
 	function formatContent(doc: Record<string, unknown>, mode: 'none' | 'wrap' | 'pretty'): string {
-		return mode === 'pretty' ? JSON.stringify(doc, null, 2) : JSON.stringify(doc);
+		if (mode === 'pretty') return JSON.stringify(doc, null, 2);
+		return extractMessage(doc);
 	}
 
 	const severity = $derived(extractSeverity(hit));

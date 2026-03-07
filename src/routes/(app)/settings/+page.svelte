@@ -18,8 +18,15 @@
 		addingNew = true;
 	}
 
-	async function handleNewSave(data: { name: string; url: string; indexName: string }) {
-		const created = await createSource(data);
+	async function handleNewSave(data: Source) {
+		const created = await createSource({
+			name: data.name,
+			url: data.url,
+			indexName: data.indexName,
+			levelField: data.levelField,
+			timestampField: data.timestampField,
+			messageField: data.messageField
+		});
 		sources = [created, ...sources];
 		addingNew = false;
 	}
@@ -50,7 +57,7 @@
 		<div class="flex flex-col gap-3">
 			{#if addingNew}
 				<SourceCard
-					source={{ id: 0, name: '', url: '', indexName: '', createdAt: new Date(), updatedAt: new Date() }}
+					source={{ id: 0, name: '', url: '', indexName: '', levelField: 'level', timestampField: 'timestamp', messageField: 'message', createdAt: new Date(), updatedAt: new Date() }}
 					editing={true}
 					isNew={true}
 					onsave={(s) => handleNewSave(s)}

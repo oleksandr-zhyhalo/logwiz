@@ -27,6 +27,9 @@
 	let name = $state('');
 	let url = $state('');
 	let indexName = $state('');
+	let levelField = $state('level');
+	let timestampField = $state('timestamp');
+	let messageField = $state('message');
 	let initialized = false;
 	let saving = $state(false);
 
@@ -37,6 +40,9 @@
 			name = source.name;
 			url = source.url;
 			indexName = source.indexName;
+			levelField = source.levelField;
+			timestampField = source.timestampField;
+			messageField = source.messageField;
 		}
 	});
 	let testing = $state(false);
@@ -48,6 +54,9 @@
 		name = source.name;
 		url = source.url;
 		indexName = source.indexName;
+		levelField = source.levelField;
+		timestampField = source.timestampField;
+		messageField = source.messageField;
 		isEditing = true;
 		testResult = null;
 		errorMessage = '';
@@ -67,9 +76,9 @@
 		errorMessage = '';
 		try {
 			if (isNew) {
-				await onsave?.({ ...source, name, url, indexName });
+				await onsave?.({ ...source, name, url, indexName, levelField, timestampField, messageField });
 			} else {
-				const updated = await updateSource({ id: source.id, name, url, indexName });
+				const updated = await updateSource({ id: source.id, name, url, indexName, levelField, timestampField, messageField });
 				onsave?.(updated);
 				isEditing = false;
 			}
@@ -119,6 +128,22 @@
 					<span>Index Name</span>
 					<input type="text" class="input input-bordered w-full" placeholder="my-index" bind:value={indexName} />
 				</label>
+
+				<div class="divider my-1 text-xs text-base-content/40">Field Mapping</div>
+				<div class="grid grid-cols-3 gap-2">
+					<label class="floating-label">
+						<span>Level Field</span>
+						<input type="text" class="input input-bordered w-full" placeholder="level" bind:value={levelField} />
+					</label>
+					<label class="floating-label">
+						<span>Timestamp Field</span>
+						<input type="text" class="input input-bordered w-full" placeholder="timestamp" bind:value={timestampField} />
+					</label>
+					<label class="floating-label">
+						<span>Message Field</span>
+						<input type="text" class="input input-bordered w-full" placeholder="message" bind:value={messageField} />
+					</label>
+				</div>
 
 				{#if testResult}
 					<div class="alert {testResult.success ? 'alert-success' : 'alert-error'} text-sm">

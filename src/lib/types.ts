@@ -3,6 +3,9 @@ export type Source = {
 	name: string;
 	url: string;
 	indexName: string;
+	levelField: string;
+	timestampField: string;
+	messageField: string;
 	createdAt: Date;
 	updatedAt: Date;
 };

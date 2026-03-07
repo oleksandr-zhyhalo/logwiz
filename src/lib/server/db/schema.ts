@@ -11,6 +11,9 @@ export const source = pgTable('source', {
 	name: text('name').notNull(),
 	url: text('url').notNull(),
 	indexName: text('index_name').notNull(),
+	levelField: text('level_field').notNull().default('level'),
+	timestampField: text('timestamp_field').notNull().default('timestamp'),
+	messageField: text('message_field').notNull().default('message'),
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 	updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
