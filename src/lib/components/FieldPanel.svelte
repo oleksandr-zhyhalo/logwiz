@@ -41,7 +41,7 @@
 	}
 </script>
 
-<div class="flex min-h-0 flex-1 flex-col bg-base-100">
+<div class="flex flex-col bg-base-100">
 	<div class="flex items-center border-b border-base-300 px-3 py-2">
 		<button class="flex flex-1 items-center" onclick={() => (collapsed = !collapsed)}>
 			<Icon
@@ -63,7 +63,7 @@
 			<span class="loading loading-sm loading-spinner"></span>
 		</div>
 	{:else if !collapsed}
-		<div class="flex flex-1 flex-col overflow-y-auto">
+		<div class="flex flex-col">
 			<!-- Active fields (draggable) -->
 			<div class="border-b border-base-300 p-2">
 				<p class="mb-1 text-xs font-medium text-base-content/50">Active</p>
