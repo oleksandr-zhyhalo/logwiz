@@ -3,7 +3,7 @@ import { error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { source } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
-import { searchLogsSchema } from '$lib/schemas/logs';
+import { searchLogsSchema, searchFieldValuesSchema } from '$lib/schemas/logs';
 import { QuickwitClient, AggregationBuilder } from 'quickwit-js';
 import { requireUser } from '$lib/middleware/auth';
 import { normalizeQuickwitUrl } from '$lib/utils';
@@ -51,7 +51,7 @@ export const searchLogs = command(searchLogsSchema, async (data) => {
 	// Add aggregations for quick filter fields
 	if (data.quickFilterFields?.length) {
 		for (const field of data.quickFilterFields) {
-			query.agg(field, AggregationBuilder.terms(field, { size: 20 }));
+			query.agg(field, AggregationBuilder.terms(field, { size: 50 }));
 		}
 	}
 
@@ -75,4 +75,58 @@ export const searchLogs = command(searchLogsSchema, async (data) => {
 		endTimestamp: endTs,
 		aggregations
 	};
+});
+
+export const searchFieldValues = command(searchFieldValuesSchema, async (data) => {
+	requireUser();
+
+	const [src] = await db.select().from(source).where(eq(source.id, data.sourceId));
+	if (!src) {
+		error(404, 'Source not found');
+	}
+
+	const endpoint = normalizeQuickwitUrl(src.url);
+	const client = new QuickwitClient(endpoint);
+	const index = client.index(src.indexName);
+
+	// Use the base query as-is; we filter aggregation results client-side
+	// because wildcard prefix queries fail on non-text fields in Quickwit
+	const baseQuery = data.query?.trim();
+	const combinedQuery = baseQuery && baseQuery !== '*' ? baseQuery : '*';
+
+	let startTs: number | undefined;
+	let endTs: number | undefined;
+
+	if (data.startTimestamp !== undefined && data.endTimestamp !== undefined) {
+		startTs = data.startTimestamp;
+		endTs = data.endTimestamp;
+	} else if (data.timeRange !== 'all') {
+		endTs = Math.floor(Date.now() / 1000);
+		const rangeSeconds: Record<string, number> = {
+			'15m': 15 * 60,
+			'1h': 60 * 60,
+			'6h': 6 * 60 * 60,
+			'24h': 24 * 60 * 60,
+			'7d': 7 * 24 * 60 * 60
+		};
+		startTs = endTs - (rangeSeconds[data.timeRange] ?? 900);
+	}
+
+	const query = index
+		.query(combinedQuery)
+		.limit(0)
+		.agg(data.field, AggregationBuilder.terms(data.field, { size: 50 }));
+
+	if (startTs !== undefined && endTs !== undefined) {
+		query.timeRange(startTs, endTs);
+	}
+
+	const result = await index.search(query);
+
+	const bucketAgg = result.aggregations?.[data.field] as { buckets?: { key: string }[] } | undefined;
+	const searchLower = data.searchTerm.toLowerCase();
+	const values = (bucketAgg?.buckets?.map((b) => String(b.key)) ?? [])
+		.filter((v) => v.toLowerCase().includes(searchLower));
+
+	return { values };
 });

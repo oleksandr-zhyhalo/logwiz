@@ -50,13 +50,17 @@
 				height="14"
 				class="mr-1 text-base-content/40"
 			/>
-			<h3 class="flex-1 text-left text-xs font-semibold uppercase tracking-wider text-base-content/60">Fields</h3>
+			<h3
+				class="flex-1 text-left text-xs font-semibold tracking-wider text-base-content/80 uppercase"
+			>
+				Fields
+			</h3>
 		</button>
 	</div>
 
 	{#if loading}
 		<div class="flex flex-1 items-center justify-center">
-			<span class="loading loading-spinner loading-sm"></span>
+			<span class="loading loading-sm loading-spinner"></span>
 		</div>
 	{:else if !collapsed}
 		<div class="flex flex-1 flex-col overflow-y-auto">
@@ -73,15 +77,15 @@
 						class="flex flex-col gap-1"
 					>
 						{#each activeFields as field (field.id)}
-							<div
-								class="flex items-center gap-1 rounded bg-base-200 px-2 py-1 text-xs"
-							>
-								<Icon icon="lucide:grip-vertical" width="12" height="12" class="shrink-0 cursor-grab text-base-content/40" />
+							<div class="flex items-center gap-1 rounded bg-base-200 px-2 py-1 text-xs">
+								<Icon
+									icon="lucide:grip-vertical"
+									width="12"
+									height="12"
+									class="shrink-0 cursor-grab text-base-content/40"
+								/>
 								<span class="flex-1 truncate">{field.name}</span>
-								<button
-									class="btn btn-ghost btn-xs p-0"
-									onclick={() => removeField(field.name)}
-								>
+								<button class="btn p-0 btn-ghost btn-xs" onclick={() => removeField(field.name)}>
 									<Icon icon="lucide:x" width="12" height="12" />
 								</button>
 							</div>
@@ -99,7 +103,12 @@
 							class="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-xs hover:bg-base-200"
 							onclick={() => addField(field.name)}
 						>
-							<Icon icon="lucide:plus" width="12" height="12" class="shrink-0 text-base-content/40" />
+							<Icon
+								icon="lucide:plus"
+								width="12"
+								height="12"
+								class="shrink-0 text-base-content/40"
+							/>
 							<span class="truncate">{field.name}</span>
 							<span class="ml-auto text-[10px] text-base-content/30">{field.type}</span>
 						</button>
@@ -107,6 +116,5 @@
 				</div>
 			</div>
 		</div>
-
 	{/if}
 </div>

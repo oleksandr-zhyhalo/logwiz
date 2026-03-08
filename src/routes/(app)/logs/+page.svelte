@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getSources } from '$lib/api/sources.remote';
-	import { searchLogs } from '$lib/api/logs.remote';
+	import { searchLogs, searchFieldValues } from '$lib/api/logs.remote';
 	import {
 		getPreference,
 		saveDisplayFields,
@@ -238,6 +238,20 @@
 		}
 	}
 
+	async function handleFieldValueSearch(field: string, searchTerm: string): Promise<string[]> {
+		if (!selectedSourceId) return [];
+		const result = await searchFieldValues({
+			sourceId: selectedSourceId,
+			field,
+			searchTerm,
+			query: queryText || '*',
+			timeRange,
+			startTimestamp: searchStartTimestamp,
+			endTimestamp: searchEndTimestamp
+		});
+		return result.values;
+	}
+
 	function handleScroll() {
 		if (!scrollElement) return;
 		const { scrollTop, scrollHeight, clientHeight } = scrollElement;
@@ -248,7 +262,7 @@
 </script>
 
 <div class="flex h-full w-full">
-	<div class="flex h-full w-56 shrink-0 flex-col border-r border-base-300 bg-base-100">
+	<div class="flex h-full w-56 shrink-0 flex-col overflow-y-auto border-r border-base-300 bg-base-100">
 		<QuickFilterPanel
 			fields={quickFilterFields}
 			{aggregations}
@@ -256,6 +270,7 @@
 			onfilter={handleFilterChange}
 			availableFields={panelAvailableFields}
 			onconfigchange={handleQuickFilterFieldsChange}
+			onsearch={handleFieldValueSearch}
 		/>
 		<FieldPanel
 			availableFields={panelAvailableFields}

@@ -12,3 +12,15 @@ export const searchLogsSchema = v.object({
 });
 
 export type SearchLogsInput = v.InferOutput<typeof searchLogsSchema>;
+
+export const searchFieldValuesSchema = v.object({
+	sourceId: v.pipe(v.number(), v.integer(), v.minValue(1)),
+	field: v.pipe(v.string(), v.minLength(1)),
+	searchTerm: v.pipe(v.string(), v.minLength(1)),
+	query: v.optional(v.string()),
+	timeRange: v.picklist(['15m', '1h', '6h', '24h', '7d', 'all']),
+	startTimestamp: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0))),
+	endTimestamp: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0)))
+});
+
+export type SearchFieldValuesInput = v.InferOutput<typeof searchFieldValuesSchema>;
