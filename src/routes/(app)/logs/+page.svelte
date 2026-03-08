@@ -112,6 +112,7 @@
 			quickFilterFields = pref.quickFilterFields.length > 0
 				? pref.quickFilterFields
 				: [selectedSource?.levelField ?? 'level'];
+			search();
 		} catch {
 			indexFields = [];
 			activeFields = [];
@@ -343,7 +344,7 @@
 				</div>
 			{:else if !hasSearched}
 				<div class="flex h-full items-center justify-center">
-					<p class="text-sm text-base-content/40">Select a source and run a search</p>
+					<span class="loading loading-sm loading-spinner"></span>
 				</div>
 			{:else if logs.length === 0}
 				<div class="flex h-full items-center justify-center">
