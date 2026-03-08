@@ -7,6 +7,7 @@ import { searchLogsSchema, searchFieldValuesSchema } from '$lib/schemas/logs';
 import { QuickwitClient, AggregationBuilder } from 'quickwit-js';
 import { requireUser } from '$lib/middleware/auth';
 import { normalizeQuickwitUrl } from '$lib/utils';
+import { TIME_PRESETS } from '$lib/types';
 
 export const searchLogs = command(searchLogsSchema, async (data) => {
 	requireUser();
@@ -26,16 +27,12 @@ export const searchLogs = command(searchLogsSchema, async (data) => {
 	if (data.startTimestamp !== undefined && data.endTimestamp !== undefined) {
 		startTs = data.startTimestamp;
 		endTs = data.endTimestamp;
-	} else if (data.timeRange !== 'all') {
-		endTs = Math.floor(Date.now() / 1000);
-		const rangeSeconds: Record<string, number> = {
-			'15m': 15 * 60,
-			'1h': 60 * 60,
-			'6h': 6 * 60 * 60,
-			'24h': 24 * 60 * 60,
-			'7d': 7 * 24 * 60 * 60
-		};
-		startTs = endTs - (rangeSeconds[data.timeRange] ?? 900);
+	} else {
+		const preset = TIME_PRESETS.find((p) => p.code === data.timeRange);
+		if (preset) {
+			endTs = Math.floor(Date.now() / 1000);
+			startTs = endTs - preset.seconds;
+		}
 	}
 
 	const query = index
@@ -100,16 +97,12 @@ export const searchFieldValues = command(searchFieldValuesSchema, async (data) =
 	if (data.startTimestamp !== undefined && data.endTimestamp !== undefined) {
 		startTs = data.startTimestamp;
 		endTs = data.endTimestamp;
-	} else if (data.timeRange !== 'all') {
-		endTs = Math.floor(Date.now() / 1000);
-		const rangeSeconds: Record<string, number> = {
-			'15m': 15 * 60,
-			'1h': 60 * 60,
-			'6h': 6 * 60 * 60,
-			'24h': 24 * 60 * 60,
-			'7d': 7 * 24 * 60 * 60
-		};
-		startTs = endTs - (rangeSeconds[data.timeRange] ?? 900);
+	} else {
+		const preset = TIME_PRESETS.find((p) => p.code === data.timeRange);
+		if (preset) {
+			endTs = Math.floor(Date.now() / 1000);
+			startTs = endTs - preset.seconds;
+		}
 	}
 
 	const query = index

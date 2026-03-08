@@ -10,8 +10,9 @@
 	import { untrack } from 'svelte';
 	import { browser } from '$app/environment';
 	import { getNestedValue, formatFieldValue, combineQueryWithFilters } from '$lib/utils';
-	import type { Source } from '$lib/types';
-	import TimeRangeBar from './TimeRangeBar.svelte';
+	import type { Source, TimeRange, TimezoneMode } from '$lib/types';
+	import TimeRangePicker from '$lib/components/TimeRangePicker.svelte';
+	import { resolveTimeRange } from '$lib/utils';
 	import LogRow from './LogRow.svelte';
 	import FieldPanel from '$lib/components/FieldPanel.svelte';
 	import QuickFilterPanel from '$lib/components/QuickFilterPanel.svelte';
@@ -19,7 +20,8 @@
 	let sources = $state<Source[]>([]);
 	let selectedSourceId = $state<number | null>(null);
 	let baseQuery = $state('');
-	let timeRange = $state<'15m' | '1h' | '6h' | '24h' | '7d' | 'all'>('15m');
+	let timeRange = $state<TimeRange>({ type: 'relative', preset: '15m' });
+	let timezoneMode = $state<TimezoneMode>('local');
 	let quickFilterFields = $state<string[]>([]);
 	let activeFilters = $state<Record<string, string[]>>({});
 	let aggregations = $state<Record<string, string[]>>({});
@@ -34,7 +36,7 @@
 	let wrapMode = $state<'none' | 'wrap' | 'pretty'>('none');
 	let selectedSource = $derived(sources.find((s) => s.id === selectedSourceId));
 
-	let indexFields = $state<{ name: string; type: string }[]>([]);
+	let indexFields = $state<{ name: string; type: string; fast: boolean }[]>([]);
 	let activeFields = $state<{ id: string; name: string }[]>([]);
 	let fieldsLoading = $state(false);
 
@@ -47,6 +49,7 @@
 	);
 
 	let panelAvailableFields = $derived(indexFields.filter((f) => !excludedFields.has(f.name)));
+	let quickFilterAvailableFields = $derived(panelAvailableFields.filter((f) => f.fast));
 
 	let extraFieldNames = $derived(activeFields.map((f) => f.name));
 
@@ -170,14 +173,15 @@
 		errorMessage = '';
 
 		try {
+			const resolved = resolveTimeRange(timeRange);
 			const result = await searchLogs({
 				sourceId: selectedSourceId,
 				query: queryText || '*',
-				timeRange,
+				timeRange: (timeRange.type === 'relative' ? timeRange.preset : '15m') as '15m',
 				offset: append ? logs.length : 0,
 				limit: BATCH_SIZE,
-				startTimestamp: append ? searchStartTimestamp : undefined,
-				endTimestamp: append ? searchEndTimestamp : undefined,
+				startTimestamp: append ? searchStartTimestamp : resolved.startTs,
+				endTimestamp: append ? searchEndTimestamp : resolved.endTs,
 				quickFilterFields
 			});
 
@@ -225,8 +229,8 @@
 		}
 	}
 
-	function handleTimeRangeChange(range: string) {
-		timeRange = range as typeof timeRange;
+	function handleTimeRangeChange(range: TimeRange) {
+		timeRange = range;
 		if (hasSearched) {
 			search();
 		}
@@ -246,7 +250,7 @@
 			field,
 			searchTerm,
 			query: queryText || '*',
-			timeRange,
+			timeRange: (timeRange.type === 'relative' ? timeRange.preset : '15m') as '15m',
 			startTimestamp: searchStartTimestamp,
 			endTimestamp: searchEndTimestamp
 		});
@@ -269,7 +273,7 @@
 			{aggregations}
 			bind:activeFilters
 			onfilter={handleFilterChange}
-			availableFields={panelAvailableFields}
+			availableFields={quickFilterAvailableFields}
 			onconfigchange={handleQuickFilterFieldsChange}
 			onsearch={handleFieldValueSearch}
 		/>
@@ -297,10 +301,17 @@
 
 				<input
 					type="text"
-					class="input-bordered input input-sm flex-1"
+					class="input-bordered input input-sm min-w-0 flex-1"
 					placeholder="Lucene query (e.g. level:error AND service:api)"
 					bind:value={baseQuery}
 					onkeydown={handleKeydown}
+				/>
+
+				<TimeRangePicker
+					value={timeRange}
+					{timezoneMode}
+					onchange={handleTimeRangeChange}
+					ontimezonechange={(mode) => (timezoneMode = mode)}
 				/>
 
 				<button
@@ -313,22 +324,19 @@
 			</div>
 
 			<div class="mt-2 flex w-full items-center justify-between">
-				<TimeRangeBar value={timeRange} onchange={handleTimeRangeChange} />
-				<div class="flex items-center gap-3">
-					<div class="flex gap-1">
-						{#each [['none', 'No wrap'], ['wrap', 'Wrap'], ['pretty', 'Pretty']] as [mode, label] (mode)}
-							<button
-								class="btn btn-xs {wrapMode === mode ? 'btn-primary' : 'btn-ghost'}"
-								onclick={() => (wrapMode = mode as typeof wrapMode)}
-							>
-								{label}
-							</button>
-						{/each}
-					</div>
-					{#if hasSearched}
-						<span class="text-xs text-base-content/50">{numHits.toLocaleString()} hits</span>
-					{/if}
+				<div class="join">
+					{#each [['none', 'No wrap'], ['wrap', 'Wrap'], ['pretty', 'Pretty']] as [mode, label] (mode)}
+						<button
+							class="btn btn-xs join-item w-18 {wrapMode === mode ? 'btn-primary' : ''}"
+							onclick={() => (wrapMode = mode as typeof wrapMode)}
+						>
+							{label}
+						</button>
+					{/each}
 				</div>
+				{#if hasSearched}
+					<span class="text-xs text-base-content/50">{numHits.toLocaleString()} hits</span>
+				{/if}
 			</div>
 		</div>
 
@@ -356,6 +364,7 @@
 						<LogRow
 							{hit}
 							{wrapMode}
+							{timezoneMode}
 							levelField={selectedSource?.levelField ?? 'level'}
 							timestampField={selectedSource?.timestampField ?? 'timestamp'}
 							messageField={selectedSource?.messageField ?? 'message'}

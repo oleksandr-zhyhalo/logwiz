@@ -9,7 +9,8 @@
 		timestampField = 'timestamp',
 		messageField = 'message',
 		extraFields = [],
-		columnWidths = {}
+		columnWidths = {},
+		timezoneMode = 'local' as 'utc' | 'local'
 	}: {
 		hit: Record<string, unknown>;
 		wrapMode: 'none' | 'wrap' | 'pretty';
@@ -18,6 +19,7 @@
 		messageField?: string;
 		extraFields?: string[];
 		columnWidths?: Record<string, number>;
+		timezoneMode?: 'utc' | 'local';
 	} = $props();
 
 	function extractSeverity(doc: Record<string, unknown>): string {
@@ -54,6 +56,17 @@
 		const value = typeof raw === 'number' && raw < 10_000_000_000 ? raw * 1000 : raw;
 		const date = new Date(value as string | number);
 		if (isNaN(date.getTime())) return String(raw);
+
+		if (timezoneMode === 'utc') {
+			const y = date.getUTCFullYear();
+			const mo = String(date.getUTCMonth() + 1).padStart(2, '0');
+			const d = String(date.getUTCDate()).padStart(2, '0');
+			const h = String(date.getUTCHours()).padStart(2, '0');
+			const mi = String(date.getUTCMinutes()).padStart(2, '0');
+			const s = String(date.getUTCSeconds()).padStart(2, '0');
+			const ms = String(date.getUTCMilliseconds()).padStart(3, '0');
+			return `${y}-${mo}-${d} ${h}:${mi}:${s}.${ms}`;
+		}
 		const y = date.getFullYear();
 		const mo = String(date.getMonth() + 1).padStart(2, '0');
 		const d = String(date.getDate()).padStart(2, '0');

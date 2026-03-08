@@ -84,14 +84,14 @@ export const getIndexFields = command(getIndexFieldsSchema, async (data) => {
 	function flattenFields(
 		mappings: typeof fieldMappings,
 		prefix = ''
-	): { name: string; type: string }[] {
-		const result: { name: string; type: string }[] = [];
+	): { name: string; type: string; fast: boolean }[] {
+		const result: { name: string; type: string; fast: boolean }[] = [];
 		for (const f of mappings) {
 			const fullName = prefix ? `${prefix}.${f.name}` : f.name;
 			if (f.type === 'object' && f.field_mappings) {
 				result.push(...flattenFields(f.field_mappings, fullName));
 			} else {
-				result.push({ name: fullName, type: f.type });
+				result.push({ name: fullName, type: f.type, fast: f.fast === true });
 			}
 		}
 		return result;
