@@ -19,6 +19,7 @@
 	import LogRow from '$lib/components/LogRow.svelte';
 	import FieldPanel from '$lib/components/FieldPanel.svelte';
 	import QuickFilterPanel from '$lib/components/QuickFilterPanel.svelte';
+	import Icon from '@iconify/svelte';
 
 	let { data } = $props();
 
@@ -364,7 +365,7 @@
 				<div class="join">
 					{#each [['none', 'No wrap'], ['wrap', 'Wrap'], ['pretty', 'Pretty']] as [mode, label] (mode)}
 						<button
-							class="btn join-item w-18 btn-xs {wrapMode === mode ? 'btn-primary' : ''}"
+							class="btn join-item w-18 btn-xs {wrapMode === mode ? 'btn-accent' : ''}"
 							onclick={() => (wrapMode = mode as typeof wrapMode)}
 						>
 							{label}
@@ -372,10 +373,8 @@
 					{/each}
 				</div>
 
-				<button
-					class="btn btn-sm"
-					onclick={shareQuery}
-				>
+				<button class="btn btn-sm ml-auto" onclick={shareQuery}>
+					<Icon icon="lucide:share-2" width="14" height="14" />
 					{copied ? 'Copied!' : 'Share'}
 				</button>
 
@@ -387,11 +386,12 @@
 				/>
 
 				<button
-					class="btn btn-sm btn-primary"
+					class="btn btn-sm btn-accent"
 					onclick={() => navigateQuery({ query: queryInput }, true)}
 					disabled={loading || !selectedIndex}
 				>
-					{loading && !logs.length ? 'Searching...' : 'Search'}
+					<Icon icon="lucide:play" width="14" height="14" />
+					{loading && !logs.length ? 'Running...' : 'Run query'}
 				</button>
 			</div>
 
