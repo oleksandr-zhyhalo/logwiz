@@ -1,93 +1,51 @@
 <script lang="ts">
-	import { getSources, createSource } from '$lib/api/sources.remote';
-	import SourceCard from './SourceCard.svelte';
-	import type { Source } from '$lib/types';
+	import { getIndexes } from '$lib/api/indexes.remote';
+	import IndexConfigCard from './IndexConfigCard.svelte';
 
-	let sources = $state<Source[]>([]);
-	let addingNew = $state(false);
+	let indexes = $state<{ indexId: string; indexUri: string }[]>([]);
 	let loaded = $state(false);
+	let errorMessage = $state('');
 
-	async function loadSources() {
-		sources = await getSources();
-		loaded = true;
+	async function loadIndexes() {
+		try {
+			indexes = await getIndexes();
+		} catch (e) {
+			errorMessage = e instanceof Error ? e.message : 'Failed to load indexes';
+		} finally {
+			loaded = true;
+		}
 	}
 
-	loadSources();
-
-	function startAdd() {
-		addingNew = true;
-	}
-
-	async function handleNewSave(data: Source) {
-		const created = await createSource({
-			name: data.name,
-			url: data.url,
-			indexName: data.indexName,
-			levelField: data.levelField,
-			timestampField: data.timestampField,
-			messageField: data.messageField
-		});
-		sources = [created, ...sources];
-		addingNew = false;
-	}
-
-	function handleNewCancel() {
-		addingNew = false;
-	}
-
-	function handleSave(updated: Source) {
-		sources = sources.map((s) => (s.id === updated.id ? updated : s));
-	}
-
-	function handleDelete(id: number) {
-		sources = sources.filter((s) => s.id !== id);
-	}
+	loadIndexes();
 </script>
 
 <div class="h-full overflow-y-auto">
 	<div class="mx-auto w-full max-w-6xl px-4 py-8">
 		<section>
-			<div class="flex items-center justify-between py-4">
-				<div>
-					<h2 class="text-xl font-semibold">Sources</h2>
-					<p class="text-sm text-base-content/60">Manage your Quickwit data sources</p>
+			<div class="py-4">
+				<h2 class="text-xl font-semibold">Index Field Mappings</h2>
+				<p class="text-sm text-base-content/60">
+					Override default field names (level, timestamp, message) per index
+				</p>
+			</div>
+
+			{#if !loaded}
+				<div class="flex justify-center py-8">
+					<span class="loading loading-sm loading-spinner"></span>
 				</div>
-				<button class="btn btn-sm btn-accent" onclick={startAdd} disabled={addingNew}>Add</button>
-			</div>
-
-			<div class="flex flex-col gap-3">
-				{#if addingNew}
-					<SourceCard
-						source={{
-							id: 0,
-							name: '',
-							url: '',
-							indexName: '',
-							levelField: 'level',
-							timestampField: 'timestamp',
-							messageField: 'message',
-							createdAt: new Date(),
-							updatedAt: new Date()
-						}}
-						editing={true}
-						isNew={true}
-						onsave={(s) => handleNewSave(s)}
-						oncancel={handleNewCancel}
-					/>
-				{/if}
-
-				{#if !loaded}
-					<p class="text-sm text-base-content/60">Loading sources...</p>
-				{:else if sources.length === 0 && !addingNew}
-					<p class="text-sm text-base-content/60">
-						No sources configured yet. Add one to get started.
-					</p>
-				{:else}
-					{#each sources as source (source.id)}
-						<SourceCard {source} onsave={handleSave} ondelete={handleDelete} />
+			{:else if errorMessage}
+				<div class="alert text-sm alert-error">{errorMessage}</div>
+			{:else if indexes.length === 0}
+				<p class="text-sm text-base-content/60">
+					No indexes found. Check that QUICKWIT_URL is configured correctly.
+				</p>
+			{:else}
+				<div class="flex flex-col gap-1">
+					{#each indexes as idx (idx.indexId)}
+						<IndexConfigCard indexId={idx.indexId} />
 					{/each}
-				{/if}
-			</div>
+				</div>
+			{/if}
 		</section>
 	</div>
 </div>

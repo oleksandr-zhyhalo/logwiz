@@ -1,25 +1,32 @@
 import { command } from '$app/server';
-import { error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { source } from '$lib/server/db/schema';
+import { indexConfig } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { searchLogsSchema, searchFieldValuesSchema } from '$lib/schemas/logs';
-import { QuickwitClient, AggregationBuilder } from 'quickwit-js';
+import { AggregationBuilder } from 'quickwit-js';
 import { requireUser } from '$lib/middleware/auth';
-import { normalizeQuickwitUrl } from '$lib/utils';
+import { getQuickwitClient } from '$lib/server/quickwit';
 import { TIME_PRESETS } from '$lib/types';
+
+async function resolveFieldConfig(indexName: string) {
+	const [config] = await db
+		.select()
+		.from(indexConfig)
+		.where(eq(indexConfig.indexName, indexName));
+
+	return {
+		levelField: config?.levelField ?? 'level',
+		timestampField: config?.timestampField ?? 'timestamp',
+		messageField: config?.messageField ?? 'message'
+	};
+}
 
 export const searchLogs = command(searchLogsSchema, async (data) => {
 	requireUser();
 
-	const [src] = await db.select().from(source).where(eq(source.id, data.sourceId));
-	if (!src) {
-		error(404, 'Source not found');
-	}
-
-	const endpoint = normalizeQuickwitUrl(src.url);
-	const client = new QuickwitClient(endpoint);
-	const index = client.index(src.indexName);
+	const fields = await resolveFieldConfig(data.indexName);
+	const client = getQuickwitClient();
+	const index = client.index(data.indexName);
 
 	let startTs: number | undefined;
 	let endTs: number | undefined;
@@ -39,13 +46,12 @@ export const searchLogs = command(searchLogsSchema, async (data) => {
 		.query(data.query || '*')
 		.limit(data.limit)
 		.offset(data.offset)
-		.sortBy(`+${src.timestampField}`);
+		.sortBy(`+${fields.timestampField}`);
 
 	if (startTs !== undefined && endTs !== undefined) {
 		query.timeRange(startTs, endTs);
 	}
 
-	// Add aggregations for quick filter fields
 	if (data.quickFilterFields?.length) {
 		for (const field of data.quickFilterFields) {
 			query.agg(field, AggregationBuilder.terms(field, { size: 50 }));
@@ -54,7 +60,6 @@ export const searchLogs = command(searchLogsSchema, async (data) => {
 
 	const result = await index.search(query);
 
-	// Extract aggregation buckets into a simple map
 	const aggregations: Record<string, string[]> = {};
 	if (result.aggregations) {
 		for (const [field, agg] of Object.entries(result.aggregations)) {
@@ -77,17 +82,9 @@ export const searchLogs = command(searchLogsSchema, async (data) => {
 export const searchFieldValues = command(searchFieldValuesSchema, async (data) => {
 	requireUser();
 
-	const [src] = await db.select().from(source).where(eq(source.id, data.sourceId));
-	if (!src) {
-		error(404, 'Source not found');
-	}
+	const client = getQuickwitClient();
+	const index = client.index(data.indexName);
 
-	const endpoint = normalizeQuickwitUrl(src.url);
-	const client = new QuickwitClient(endpoint);
-	const index = client.index(src.indexName);
-
-	// Use the base query as-is; we filter aggregation results client-side
-	// because wildcard prefix queries fail on non-text fields in Quickwit
 	const baseQuery = data.query?.trim();
 	const combinedQuery = baseQuery && baseQuery !== '*' ? baseQuery : '*';
 

@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 
 export const searchLogsSchema = v.object({
-	sourceId: v.pipe(v.number(), v.integer(), v.minValue(1)),
+	indexName: v.pipe(v.string(), v.minLength(1)),
 	query: v.string(),
 	timeRange: v.picklist(['5m', '15m', '30m', '1h', '6h', '1d', '3d', '1w', '1M']),
 	offset: v.pipe(v.number(), v.integer(), v.minValue(0)),
@@ -14,7 +14,7 @@ export const searchLogsSchema = v.object({
 export type SearchLogsInput = v.InferOutput<typeof searchLogsSchema>;
 
 export const searchFieldValuesSchema = v.object({
-	sourceId: v.pipe(v.number(), v.integer(), v.minValue(1)),
+	indexName: v.pipe(v.string(), v.minLength(1)),
 	field: v.pipe(v.string(), v.minLength(1)),
 	searchTerm: v.pipe(v.string(), v.minLength(1)),
 	query: v.optional(v.string()),

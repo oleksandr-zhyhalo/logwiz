@@ -1,18 +1,17 @@
 <script lang="ts">
-	import { getSources } from '$lib/api/sources.remote';
+	import { getIndexes, getIndexFields, getIndexConfig } from '$lib/api/indexes.remote';
 	import { searchLogs, searchFieldValues } from '$lib/api/logs.remote';
 	import {
 		getPreference,
 		saveDisplayFields,
-		saveQuickFilterFields,
-		getIndexFields
+		saveQuickFilterFields
 	} from '$lib/api/preferences.remote';
 	import { untrack } from 'svelte';
 	import { browser } from '$app/environment';
 	import { goto, afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { getNestedValue, formatFieldValue, combineQueryWithFilters } from '$lib/utils';
-	import type { Source, TimeRange } from '$lib/types';
+	import type { TimeRange } from '$lib/types';
 	import { buildQueryUrl, serialize, hasNonDefaultParams } from '$lib/query-params';
 	import type { ParsedQuery } from '$lib/query-params';
 	import TimeRangePicker from '$lib/components/TimeRangePicker.svelte';
@@ -23,15 +22,15 @@
 
 	let { data } = $props();
 
-	let sources = $state<Source[]>([]);
-	let selectedSourceId = $state<number | null>(null);
+	let indexes = $state<{ indexId: string; indexUri: string }[]>([]);
+	let selectedIndex = $state<string | null>(null);
 	let queryInput = $state(data.parsedQuery.query);
 	let timeRange = $derived(data.parsedQuery.timeRange);
 	let timezoneMode = $derived(data.parsedQuery.timezoneMode);
 	let quickFilterFields = $state<string[]>([]);
 	let activeFilters = $derived(data.parsedQuery.filters);
 	let aggregations = $state<Record<string, string[]>>({});
-	let urlSourceId = $derived(data.parsedQuery.sourceId);
+	let urlIndex = $derived(data.parsedQuery.index);
 	let queryText = $derived(combineQueryWithFilters(queryInput, activeFilters));
 	let logs = $state<Record<string, unknown>[]>([]);
 	let numHits = $state(0);
@@ -41,26 +40,24 @@
 	let searchStartTimestamp = $state<number | undefined>(undefined);
 	let searchEndTimestamp = $state<number | undefined>(undefined);
 	let wrapMode = $state<'none' | 'wrap' | 'pretty'>('none');
-	let selectedSource = $derived(sources.find((s) => s.id === selectedSourceId));
+
+	let fieldConfig = $state({
+		levelField: 'level',
+		timestampField: 'timestamp',
+		messageField: 'message'
+	});
 
 	let indexFields = $state<{ name: string; type: string; fast: boolean }[]>([]);
 	let activeFields = $state<string[]>([]);
 	let fieldsLoading = $state(false);
 
 	let excludedFields = $derived(
-		new Set([
-			selectedSource?.levelField ?? 'level',
-			selectedSource?.timestampField ?? 'timestamp',
-			selectedSource?.messageField ?? 'message'
-		])
+		new Set([fieldConfig.levelField, fieldConfig.timestampField, fieldConfig.messageField])
 	);
 
 	let panelAvailableFields = $derived(indexFields.filter((f) => !excludedFields.has(f.name)));
 	let quickFilterExcludedFields = $derived(
-		new Set([
-			selectedSource?.timestampField ?? 'timestamp',
-			selectedSource?.messageField ?? 'message'
-		])
+		new Set([fieldConfig.timestampField, fieldConfig.messageField])
 	);
 	let quickFilterAvailableFields = $derived(
 		indexFields.filter((f) => !quickFilterExcludedFields.has(f.name))
@@ -99,35 +96,21 @@
 		});
 	});
 
-	// Sync queryInput from URL when navigation occurs (e.g. back/forward)
 	afterNavigate(() => {
 		queryInput = data.parsedQuery.query;
 	});
 
-	// Track the last searched query to detect meaningful changes from navigation
 	let lastSearchedParams = $state('');
 
-	// Single reactive search trigger — watches URL state and auto-searches on meaningful changes.
-	// No event handler calls search() directly, except:
-	//   - loadFieldsForSource (source change needs fields loaded first)
-	//   - handleQuickFilterFieldsChange (field config isn't in URL)
 	$effect(() => {
 		const parsed = data.parsedQuery;
 		const currentParams = serialize(parsed).toString();
 
-		// Nothing changed
 		if (currentParams === lastSearchedParams) return;
-
-		// No source selected yet (bare /logs or source loading)
-		if (parsed.sourceId === null) return;
-
-		// Source mismatch means loadFieldsForSource is handling it
-		if (parsed.sourceId !== selectedSourceId) return;
-
-		// Fields not loaded yet for this source
+		if (parsed.index === null) return;
+		if (parsed.index !== selectedIndex) return;
 		if (fieldsLoading) return;
 
-		// Either we've searched before, or this is a shared link with params
 		if (hasSearched || hasNonDefaultParams(parsed)) {
 			lastSearchedParams = currentParams;
 			search();
@@ -147,46 +130,45 @@
 
 	const BATCH_SIZE = 50;
 
-	async function loadSources() {
-		sources = await getSources();
-		if (sources.length > 0 && selectedSourceId === null) {
-			// URL source takes priority, then localStorage, then first
-			const urlId = urlSourceId;
-			const saved = browser ? localStorage.getItem('selectedSourceId') : null;
-			const savedId = saved ? Number(saved) : null;
+	async function loadIndexes() {
+		try {
+			indexes = await getIndexes();
+			if (indexes.length > 0 && selectedIndex === null) {
+				const urlIdx = urlIndex;
 
-			let id: number;
-			if (urlId !== null && sources.some((s) => s.id === urlId)) {
-				id = urlId;
-			} else if (savedId && sources.some((s) => s.id === savedId)) {
-				id = savedId;
-			} else {
-				id = sources[0].id;
-			}
+				let idx: string;
+				if (urlIdx && indexes.some((i) => i.indexId === urlIdx)) {
+					idx = urlIdx;
+				} else {
+					idx = indexes[0].indexId;
+				}
 
-			selectedSourceId = id;
-			// Sync URL if source wasn't already there
-			if (urlId !== id) {
-				navigateQuery({ sourceId: id });
+				selectedIndex = idx;
+				if (urlIdx !== idx) {
+					navigateQuery({ index: idx });
+				}
+				loadFieldsForIndex(idx);
 			}
-			loadFieldsForSource(id);
+		} catch (e) {
+			errorMessage = e instanceof Error ? e.message : 'Failed to load indexes';
 		}
 	}
 
-	loadSources();
+	loadIndexes();
 
-	async function loadFieldsForSource(sourceId: number) {
+	async function loadFieldsForIndex(indexName: string) {
 		fieldsLoading = true;
 		try {
-			const [fields, pref] = await Promise.all([
-				getIndexFields({ sourceId }),
-				getPreference({ sourceId })
+			const [fields, config, pref] = await Promise.all([
+				getIndexFields({ indexName }),
+				getIndexConfig(indexName),
+				getPreference({ indexName })
 			]);
 			indexFields = fields;
+			fieldConfig = config;
 			activeFields = pref.displayFields;
 
-			// Load quick filter fields; ensure level is always first
-			const levelField = selectedSource?.levelField ?? 'level';
+			const levelField = config.levelField;
 			const savedFields = (
 				pref.quickFilterFields.length > 0 ? pref.quickFilterFields : [levelField]
 			).filter((f) => f !== levelField);
@@ -201,30 +183,28 @@
 		}
 	}
 
-	function handleSourceChange(sourceId: number) {
-		selectedSourceId = sourceId;
-		localStorage.setItem('selectedSourceId', String(sourceId));
-		navigateQuery({ sourceId, filters: {} });
+	function handleIndexChange(indexName: string) {
+		selectedIndex = indexName;
+		navigateQuery({ index: indexName, filters: {} });
 		aggregations = {};
-		loadFieldsForSource(sourceId);
+		loadFieldsForIndex(indexName);
 	}
 
 	let saveTimeout: ReturnType<typeof setTimeout>;
 	function handleFieldsChange(fields: string[]) {
 		clearTimeout(saveTimeout);
 		saveTimeout = setTimeout(() => {
-			if (selectedSourceId) {
-				saveDisplayFields({ sourceId: selectedSourceId, fields });
+			if (selectedIndex) {
+				saveDisplayFields({ indexName: selectedIndex, fields });
 			}
 		}, 500);
 	}
 
 	let quickFilterSaveTimeout: ReturnType<typeof setTimeout>;
 	function handleQuickFilterFieldsChange(fields: string[]) {
-		const levelField = selectedSource?.levelField ?? 'level';
+		const levelField = fieldConfig.levelField;
 		const otherFields = fields.filter((f) => f !== levelField);
 		quickFilterFields = [levelField, ...otherFields];
-		// Clean aggregations/activeFilters for removed fields
 		const fieldSet = new Set(fields);
 		aggregations = Object.fromEntries(
 			Object.entries(aggregations).filter(([k]) => fieldSet.has(k))
@@ -237,15 +217,15 @@
 		}
 		clearTimeout(quickFilterSaveTimeout);
 		quickFilterSaveTimeout = setTimeout(() => {
-			if (selectedSourceId) {
-				saveQuickFilterFields({ sourceId: selectedSourceId, fields });
+			if (selectedIndex) {
+				saveQuickFilterFields({ indexName: selectedIndex, fields });
 			}
 			if (hasSearched) search();
 		}, 500);
 	}
 
 	async function search(append = false) {
-		if (selectedSourceId === null) return;
+		if (selectedIndex === null) return;
 
 		loading = true;
 		errorMessage = '';
@@ -257,7 +237,7 @@
 		try {
 			const resolved = resolveTimeRange(timeRange);
 			const result = await searchLogs({
-				sourceId: selectedSourceId,
+				indexName: selectedIndex,
 				query: queryText || '*',
 				timeRange: (timeRange.type === 'relative' ? timeRange.preset : '15m') as '15m',
 				offset: append ? logs.length : 0,
@@ -270,14 +250,11 @@
 			searchStartTimestamp = result.startTimestamp;
 			searchEndTimestamp = result.endTimestamp;
 
-			// Update aggregations only from unfiltered searches so filter
-			// values don't disappear when the user narrows results
 			if (!append && result.aggregations) {
 				const hasActiveFilters = Object.keys(activeFilters).length > 0;
 				if (!hasActiveFilters) {
 					aggregations = result.aggregations;
 				} else {
-					// Merge in aggregations for new fields without overwriting existing
 					const merged = { ...aggregations };
 					for (const [field, values] of Object.entries(result.aggregations)) {
 						if (!(field in merged)) {
@@ -320,9 +297,9 @@
 	}
 
 	async function handleFieldValueSearch(field: string, searchTerm: string): Promise<string[]> {
-		if (!selectedSourceId) return [];
+		if (!selectedIndex) return [];
 		const result = await searchFieldValues({
-			sourceId: selectedSourceId,
+			indexName: selectedIndex,
 			field,
 			searchTerm,
 			query: queryText || '*',
@@ -354,7 +331,7 @@
 			availableFields={quickFilterAvailableFields}
 			onconfigchange={handleQuickFilterFieldsChange}
 			onsearch={handleFieldValueSearch}
-			pinnedFields={[selectedSource?.levelField ?? 'level']}
+			pinnedFields={[fieldConfig.levelField]}
 		/>
 		<FieldPanel
 			availableFields={panelAvailableFields}
@@ -365,16 +342,15 @@
 	</div>
 
 	<div class="flex min-w-0 flex-1 flex-col">
-		<!-- Controls bar -->
 		<div class="border-b border-base-300 bg-base-100 px-4 py-3">
 			<div class="flex w-full items-center gap-2">
 				<select
 					class="select-bordered select w-48 select-sm"
-					value={selectedSourceId}
-					onchange={(e) => handleSourceChange(Number(e.currentTarget.value))}
+					value={selectedIndex}
+					onchange={(e) => handleIndexChange(e.currentTarget.value)}
 				>
-					{#each sources as src (src.id)}
-						<option value={src.id}>{src.name}</option>
+					{#each indexes as idx (idx.indexId)}
+						<option value={idx.indexId}>{idx.indexId}</option>
 					{/each}
 				</select>
 
@@ -396,7 +372,7 @@
 				<button
 					class="btn btn-sm btn-primary"
 					onclick={() => navigateQuery({ query: queryInput }, true)}
-					disabled={loading || !selectedSourceId}
+					disabled={loading || !selectedIndex}
 				>
 					{loading && !logs.length ? 'Searching...' : 'Search'}
 				</button>
@@ -419,7 +395,6 @@
 			</div>
 		</div>
 
-		<!-- Log stream -->
 		<div
 			bind:this={scrollElement}
 			class="min-h-0 flex-1 overflow-auto bg-base-200/30"
@@ -444,9 +419,9 @@
 							{hit}
 							{wrapMode}
 							{timezoneMode}
-							levelField={selectedSource?.levelField ?? 'level'}
-							timestampField={selectedSource?.timestampField ?? 'timestamp'}
-							messageField={selectedSource?.messageField ?? 'message'}
+							levelField={fieldConfig.levelField}
+							timestampField={fieldConfig.timestampField}
+							messageField={fieldConfig.messageField}
 							extraFields={extraFieldNames}
 							{columnWidths}
 						/>

@@ -1,303 +1,212 @@
 import { describe, it, expect } from 'vitest';
-import { serialize, deserialize, buildQueryUrl, hasNonDefaultParams } from './query-params';
+import { serialize, deserialize, hasNonDefaultParams, buildQueryUrl } from './query-params';
+import type { ParsedQuery } from './query-params';
+
+function defaults(overrides: Partial<ParsedQuery> = {}): ParsedQuery {
+	return {
+		index: null,
+		query: '',
+		filters: {},
+		timeRange: { type: 'relative', preset: '15m' },
+		timezoneMode: 'local',
+		...overrides
+	};
+}
 
 describe('serialize', () => {
-	it('serializes default state to minimal params', () => {
-		const params = serialize({
-			sourceId: null,
-			query: '',
-			filters: {},
-			timeRange: { type: 'relative', preset: '15m' },
-			timezoneMode: 'local'
-		});
-		// Defaults are omitted
+	it('empty state produces no params', () => {
+		const params = serialize(defaults());
 		expect(params.toString()).toBe('');
 	});
 
-	it('serializes source and query', () => {
-		const params = serialize({
-			sourceId: 1,
-			query: 'level:error',
-			filters: {},
-			timeRange: { type: 'relative', preset: '15m' },
-			timezoneMode: 'local'
-		});
-		expect(params.get('source')).toBe('1');
+	it('includes index when set', () => {
+		const params = serialize(defaults({ index: 'my-logs' }));
+		expect(params.get('index')).toBe('my-logs');
+	});
+
+	it('includes query when non-empty', () => {
+		const params = serialize(defaults({ query: 'level:error' }));
 		expect(params.get('q')).toBe('level:error');
-		expect(params.has('from')).toBe(false); // default omitted
-		expect(params.has('tz')).toBe(false); // default omitted
 	});
 
-	it('serializes filters with f. prefix', () => {
-		const params = serialize({
-			sourceId: 1,
-			query: '',
-			filters: { level: ['error', 'warn'], service: ['api'] },
-			timeRange: { type: 'relative', preset: '15m' },
-			timezoneMode: 'local'
-		});
-		expect(params.get('f.level')).toBe('error,warn');
-		expect(params.get('f.service')).toBe('api');
+	it('omits default time range', () => {
+		const params = serialize(defaults());
+		expect(params.has('from')).toBe(false);
 	});
 
-	it('serializes relative time range', () => {
-		const params = serialize({
-			sourceId: null,
-			query: '',
-			filters: {},
-			timeRange: { type: 'relative', preset: '1h' },
-			timezoneMode: 'local'
-		});
+	it('includes non-default relative time', () => {
+		const params = serialize(defaults({ timeRange: { type: 'relative', preset: '1h' } }));
 		expect(params.get('from')).toBe('1h');
-		expect(params.has('to')).toBe(false);
 	});
 
-	it('serializes absolute time range', () => {
-		const params = serialize({
-			sourceId: null,
-			query: '',
-			filters: {},
-			timeRange: { type: 'absolute', start: 1709913600, end: 1709917200 },
-			timezoneMode: 'local'
-		});
-		expect(params.get('from')).toBe('1709913600');
-		expect(params.get('to')).toBe('1709917200');
+	it('includes absolute time range', () => {
+		const params = serialize(
+			defaults({ timeRange: { type: 'absolute', start: 1000, end: 2000 } })
+		);
+		expect(params.get('from')).toBe('1000');
+		expect(params.get('to')).toBe('2000');
 	});
 
-	it('serializes timezone mode when not default', () => {
-		const params = serialize({
-			sourceId: null,
-			query: '',
-			filters: {},
-			timeRange: { type: 'relative', preset: '15m' },
-			timezoneMode: 'utc'
-		});
+	it('includes timezone when not default', () => {
+		const params = serialize(defaults({ timezoneMode: 'utc' }));
 		expect(params.get('tz')).toBe('utc');
 	});
 
-	it('URL-encodes filter values containing commas', () => {
-		const params = serialize({
-			sourceId: null,
-			query: '',
-			filters: { tag: ['a,b', 'c'] },
-			timeRange: { type: 'relative', preset: '15m' },
-			timezoneMode: 'local'
-		});
-		const raw = params.get('f.tag');
-		expect(raw).toBeTruthy();
+	it('omits default timezone', () => {
+		const params = serialize(defaults());
+		expect(params.has('tz')).toBe(false);
+	});
+
+	it('serializes filters', () => {
+		const params = serialize(defaults({ filters: { level: ['error', 'warn'] } }));
+		expect(params.get('f.level')).toBe('error,warn');
+	});
+
+	it('percent-encodes commas in filter values', () => {
+		const params = serialize(defaults({ filters: { msg: ['a,b', 'c'] } }));
+		expect(params.get('f.msg')).toBe('a%2Cb,c');
+	});
+
+	it('percent-encodes percent signs in filter values', () => {
+		const params = serialize(defaults({ filters: { msg: ['100%'] } }));
+		expect(params.get('f.msg')).toBe('100%25');
+	});
+
+	it('handles filter values with both commas and percents', () => {
+		const params = serialize(defaults({ filters: { msg: ['a%,b'] } }));
+		expect(params.get('f.msg')).toBe('a%25%2Cb');
 	});
 });
 
 describe('deserialize', () => {
 	it('returns defaults for empty params', () => {
 		const result = deserialize(new URLSearchParams());
-		expect(result.sourceId).toBe(null);
-		expect(result.query).toBe('');
-		expect(result.filters).toEqual({});
-		expect(result.timeRange).toEqual({ type: 'relative', preset: '15m' });
-		expect(result.timezoneMode).toBe('local');
+		expect(result).toEqual(defaults());
 	});
 
-	it('parses source and query', () => {
-		const params = new URLSearchParams('source=1&q=level:error');
-		const result = deserialize(params);
-		expect(result.sourceId).toBe(1);
+	it('parses index', () => {
+		const result = deserialize(new URLSearchParams('index=my-logs'));
+		expect(result.index).toBe('my-logs');
+	});
+
+	it('returns null index when missing', () => {
+		const result = deserialize(new URLSearchParams());
+		expect(result.index).toBeNull();
+	});
+
+	it('parses query', () => {
+		const result = deserialize(new URLSearchParams('q=level:error'));
 		expect(result.query).toBe('level:error');
 	});
 
-	it('parses filters with f. prefix', () => {
-		const params = new URLSearchParams('f.level=error,warn&f.service=api');
-		const result = deserialize(params);
-		expect(result.filters).toEqual({
-			level: ['error', 'warn'],
-			service: ['api']
-		});
-	});
-
-	it('parses relative time range', () => {
-		const params = new URLSearchParams('from=1h');
-		const result = deserialize(params);
+	it('parses relative time', () => {
+		const result = deserialize(new URLSearchParams('from=1h'));
 		expect(result.timeRange).toEqual({ type: 'relative', preset: '1h' });
 	});
 
-	it('parses absolute time range', () => {
-		const params = new URLSearchParams('from=1709913600&to=1709917200');
-		const result = deserialize(params);
-		expect(result.timeRange).toEqual({ type: 'absolute', start: 1709913600, end: 1709917200 });
+	it('parses absolute time', () => {
+		const result = deserialize(new URLSearchParams('from=1000&to=2000'));
+		expect(result.timeRange).toEqual({ type: 'absolute', start: 1000, end: 2000 });
 	});
 
-	it('parses timezone mode', () => {
-		const params = new URLSearchParams('tz=utc');
-		const result = deserialize(params);
+	it('falls back to default for invalid time preset', () => {
+		const result = deserialize(new URLSearchParams('from=invalid'));
+		expect(result.timeRange).toEqual({ type: 'relative', preset: '15m' });
+	});
+
+	it('parses timezone', () => {
+		const result = deserialize(new URLSearchParams('tz=utc'));
 		expect(result.timezoneMode).toBe('utc');
 	});
 
-	it('ignores invalid source id', () => {
-		const params = new URLSearchParams('source=abc');
-		const result = deserialize(params);
-		expect(result.sourceId).toBe(null);
-	});
-
-	it('ignores invalid timezone', () => {
-		const params = new URLSearchParams('tz=pacific');
-		const result = deserialize(params);
+	it('falls back to default for invalid timezone', () => {
+		const result = deserialize(new URLSearchParams('tz=invalid'));
 		expect(result.timezoneMode).toBe('local');
 	});
 
-	it('falls back to relative for invalid from value', () => {
-		const params = new URLSearchParams('from=bogus');
-		const result = deserialize(params);
-		expect(result.timeRange).toEqual({ type: 'relative', preset: '15m' });
+	it('parses filters', () => {
+		const result = deserialize(new URLSearchParams('f.level=error,warn'));
+		expect(result.filters).toEqual({ level: ['error', 'warn'] });
+	});
+
+	it('decodes percent-encoded commas in filters', () => {
+		// URLSearchParams auto-decodes %25 → %, so we pass what serialize produces
+		const result = deserialize(new URLSearchParams('f.msg=a%252Cb,c'));
+		expect(result.filters).toEqual({ msg: ['a,b', 'c'] });
+	});
+
+	it('decodes percent-encoded percent signs in filters', () => {
+		const result = deserialize(new URLSearchParams('f.msg=100%25'));
+		expect(result.filters).toEqual({ msg: ['100%'] });
 	});
 });
 
-describe('serialize/deserialize roundtrip', () => {
-	it('roundtrips a full query', () => {
-		const original = {
-			sourceId: 3,
-			query: 'message:"server error" AND status:500',
-			filters: { level: ['error', 'warn'], service: ['api', 'auth'] },
-			timeRange: { type: 'absolute' as const, start: 1709913600, end: 1709917200 },
-			timezoneMode: 'utc' as const
-		};
-		const params = serialize(original);
-		const restored = deserialize(params);
-		expect(restored).toEqual(original);
+describe('roundtrip', () => {
+	it('preserves full state through serialize → deserialize', () => {
+		const original = defaults({
+			index: 'otel-logs',
+			query: 'service:api',
+			filters: { level: ['error'], host: ['a,b'] },
+			timeRange: { type: 'relative', preset: '6h' },
+			timezoneMode: 'utc'
+		});
+		const result = deserialize(serialize(original));
+		expect(result).toEqual(original);
 	});
 
-	it('roundtrips defaults', () => {
-		const original = {
-			sourceId: null,
-			query: '',
-			filters: {},
-			timeRange: { type: 'relative' as const, preset: '15m' },
-			timezoneMode: 'local' as const
-		};
-		const params = serialize(original);
-		const restored = deserialize(params);
-		expect(restored).toEqual(original);
+	it('preserves absolute time range', () => {
+		const original = defaults({
+			timeRange: { type: 'absolute', start: 1700000000, end: 1700003600 }
+		});
+		const result = deserialize(serialize(original));
+		expect(result).toEqual(original);
 	});
 
-	it('roundtrips filter values containing literal %2C text', () => {
-		const original = {
-			sourceId: null,
-			query: '',
-			filters: { tag: ['has%2Cencoded', 'normal'] },
-			timeRange: { type: 'relative' as const, preset: '15m' },
-			timezoneMode: 'local' as const
-		};
-		const params = serialize(original);
-		const restored = deserialize(params);
-		expect(restored.filters).toEqual(original.filters);
-	});
-
-	it('roundtrips filter values with commas', () => {
-		const original = {
-			sourceId: null,
-			query: '',
-			filters: { tag: ['a,b', 'c'] },
-			timeRange: { type: 'relative' as const, preset: '15m' },
-			timezoneMode: 'local' as const
-		};
-		const params = serialize(original);
-		const restored = deserialize(params);
-		expect(restored.filters).toEqual(original.filters);
+	it('preserves defaults', () => {
+		const result = deserialize(serialize(defaults()));
+		expect(result).toEqual(defaults());
 	});
 });
 
 describe('hasNonDefaultParams', () => {
 	it('returns false for default state', () => {
-		expect(
-			hasNonDefaultParams({
-				sourceId: null,
-				query: '',
-				filters: {},
-				timeRange: { type: 'relative', preset: '15m' },
-				timezoneMode: 'local'
-			})
-		).toBe(false);
-	});
-
-	it('returns false for source-only state', () => {
-		expect(
-			hasNonDefaultParams({
-				sourceId: 1,
-				query: '',
-				filters: {},
-				timeRange: { type: 'relative', preset: '15m' },
-				timezoneMode: 'local'
-			})
-		).toBe(false);
+		expect(hasNonDefaultParams(defaults())).toBe(false);
 	});
 
 	it('returns true when query is set', () => {
+		expect(hasNonDefaultParams(defaults({ query: 'hello' }))).toBe(true);
+	});
+
+	it('returns true when filters exist', () => {
+		expect(hasNonDefaultParams(defaults({ filters: { level: ['error'] } }))).toBe(true);
+	});
+
+	it('returns true for absolute time', () => {
 		expect(
-			hasNonDefaultParams({
-				sourceId: 1,
-				query: 'level:error',
-				filters: {},
-				timeRange: { type: 'relative', preset: '15m' },
-				timezoneMode: 'local'
-			})
+			hasNonDefaultParams(
+				defaults({ timeRange: { type: 'absolute', start: 1000, end: 2000 } })
+			)
 		).toBe(true);
 	});
 
-	it('returns true when filters are set', () => {
+	it('returns true for non-default relative time', () => {
 		expect(
-			hasNonDefaultParams({
-				sourceId: 1,
-				query: '',
-				filters: { level: ['error'] },
-				timeRange: { type: 'relative', preset: '15m' },
-				timezoneMode: 'local'
-			})
-		).toBe(true);
-	});
-
-	it('returns true for non-default relative preset', () => {
-		expect(
-			hasNonDefaultParams({
-				sourceId: 1,
-				query: '',
-				filters: {},
-				timeRange: { type: 'relative', preset: '1h' },
-				timezoneMode: 'local'
-			})
-		).toBe(true);
-	});
-
-	it('returns true for absolute time range', () => {
-		expect(
-			hasNonDefaultParams({
-				sourceId: 1,
-				query: '',
-				filters: {},
-				timeRange: { type: 'absolute', start: 1000, end: 2000 },
-				timezoneMode: 'local'
-			})
+			hasNonDefaultParams(defaults({ timeRange: { type: 'relative', preset: '1h' } }))
 		).toBe(true);
 	});
 });
 
 describe('buildQueryUrl', () => {
-	it('merges partial state into existing params', () => {
-		const current = new URLSearchParams('source=1&q=hello&from=1h');
-		const url = buildQueryUrl(current, { query: 'goodbye' });
-		const result = deserialize(new URLSearchParams(url));
-		expect(result.sourceId).toBe(1);
-		expect(result.query).toBe('goodbye');
-		expect(result.timeRange).toEqual({ type: 'relative', preset: '1h' });
+	it('merges partial update into existing params', () => {
+		const current = new URLSearchParams('index=my-logs&q=old');
+		const url = buildQueryUrl(current, { query: 'new' });
+		const params = new URLSearchParams(url.slice(1));
+		expect(params.get('index')).toBe('my-logs');
+		expect(params.get('q')).toBe('new');
 	});
 
-	it('clears filters when setting empty object', () => {
-		const current = new URLSearchParams('source=1&f.level=error');
-		const url = buildQueryUrl(current, { filters: {} });
-		expect(url).not.toContain('f.level');
-	});
-
-	it('returns just the search string portion', () => {
-		const current = new URLSearchParams();
-		const url = buildQueryUrl(current, { sourceId: 5 });
-		expect(url).toBe('?source=5');
+	it('returns ? for empty state', () => {
+		const url = buildQueryUrl(new URLSearchParams(), {});
+		expect(url).toBe('?');
 	});
 });

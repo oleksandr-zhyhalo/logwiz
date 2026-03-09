@@ -2,7 +2,7 @@ import type { TimeRange, TimezoneMode } from '$lib/types';
 import { TIME_PRESETS } from '$lib/types';
 
 export interface ParsedQuery {
-	sourceId: number | null;
+	index: string | null;
 	query: string;
 	filters: Record<string, string[]>;
 	timeRange: TimeRange;
@@ -33,8 +33,8 @@ function encodeFilterValues(values: string[]): string {
 export function serialize(state: ParsedQuery): URLSearchParams {
 	const params = new URLSearchParams();
 
-	if (state.sourceId !== null) {
-		params.set('source', String(state.sourceId));
+	if (state.index !== null) {
+		params.set('index', state.index);
 	}
 
 	if (state.query && state.query !== DEFAULTS.query) {
@@ -85,9 +85,8 @@ function decodeFilterValues(raw: string): string[] {
 }
 
 export function deserialize(params: URLSearchParams): ParsedQuery {
-	// Source
-	const sourceRaw = params.get('source');
-	const sourceId = sourceRaw !== null && !isNaN(Number(sourceRaw)) ? Number(sourceRaw) : null;
+	// Index
+	const index = params.get('index');
 
 	// Query
 	const query = params.get('q') ?? '';
@@ -121,12 +120,12 @@ export function deserialize(params: URLSearchParams): ParsedQuery {
 	const tz = params.get('tz');
 	const timezoneMode: TimezoneMode = tz === 'utc' || tz === 'local' ? tz : DEFAULTS.timezoneMode;
 
-	return { sourceId, query, filters, timeRange, timezoneMode };
+	return { index, query, filters, timeRange, timezoneMode };
 }
 
 /**
  * Merge a partial query update into existing URL params and return
- * the new search string (e.g. "?source=1&q=hello").
+ * the new search string (e.g. "?index=my-logs&q=hello").
  */
 export function buildQueryUrl(current: URLSearchParams, partial: Partial<ParsedQuery>): string {
 	const prev = deserialize(current);

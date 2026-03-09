@@ -1,32 +1,31 @@
-import { pgTable, serial, integer, text, timestamp, jsonb, unique } from 'drizzle-orm/pg-core';
+import { sqliteTable, integer, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
 import { user } from './auth.schema';
 
-export const source = pgTable('source', {
-	id: serial('id').primaryKey(),
-	name: text('name').notNull(),
-	url: text('url').notNull(),
-	indexName: text('index_name').notNull(),
+export const indexConfig = sqliteTable('index_config', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	indexName: text('index_name').notNull().unique(),
 	levelField: text('level_field').notNull().default('level'),
 	timestampField: text('timestamp_field').notNull().default('timestamp'),
 	messageField: text('message_field').notNull().default('message'),
-	createdAt: timestamp('created_at').defaultNow().notNull(),
-	updatedAt: timestamp('updated_at').defaultNow().notNull()
+	createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`).notNull()
 });
 
-export const userPreference = pgTable(
+export const userPreference = sqliteTable(
 	'user_preference',
 	{
-		id: serial('id').primaryKey(),
+		id: integer('id').primaryKey({ autoIncrement: true }),
 		userId: text('user_id')
 			.notNull()
 			.references(() => user.id, { onDelete: 'cascade' }),
-		sourceId: integer('source_id').references(() => source.id, { onDelete: 'cascade' }),
-		displayFields: jsonb('display_fields').$type<string[]>(),
-		quickFilterFields: jsonb('quick_filter_fields').$type<string[]>(),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-		updatedAt: timestamp('updated_at').defaultNow().notNull()
+		indexName: text('index_name').notNull(),
+		displayFields: text('display_fields', { mode: 'json' }).$type<string[]>(),
+		quickFilterFields: text('quick_filter_fields', { mode: 'json' }).$type<string[]>(),
+		createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`).notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`).notNull()
 	},
-	(table) => [unique('user_preference_unique').on(table.userId, table.sourceId)]
+	(table) => [uniqueIndex('user_preference_unique').on(table.userId, table.indexName)]
 );
 
 export * from './auth.schema';

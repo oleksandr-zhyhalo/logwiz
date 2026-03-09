@@ -1,13 +1,9 @@
-export type Source = {
+export type IndexConfig = {
 	id: number;
-	name: string;
-	url: string;
 	indexName: string;
 	levelField: string;
 	timestampField: string;
 	messageField: string;
-	createdAt: Date;
-	updatedAt: Date;
 };
 
 export type RelativeTimeRange = { type: 'relative'; preset: string };
@@ -28,14 +24,4 @@ export const TIME_PRESETS = [
 	{ label: 'Last 1 month', code: '1M', seconds: 30 * 24 * 60 * 60 }
 ] as const;
 
-export type IndexField = { name: string; type: string };
-
-export type UserPreference = {
-	id: number;
-	userId: string;
-	sourceId: number | null;
-	displayFields: string[] | null;
-	quickFilterFields: string[] | null;
-	createdAt: Date;
-	updatedAt: Date;
-};
+export type IndexField = { name: string; type: string; fast: boolean };
