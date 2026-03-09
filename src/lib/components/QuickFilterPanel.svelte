@@ -113,6 +113,7 @@
 
 	function enterConfigMode() {
 		configFields = fields.map((name) => ({ id: name, name }));
+		collapsed = false;
 		configMode = true;
 	}
 

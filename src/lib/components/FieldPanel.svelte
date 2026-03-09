@@ -67,7 +67,10 @@
 		{#if availableFields.length > 0}
 			<button
 				class="btn ml-1 p-0 btn-ghost btn-xs"
-				onclick={() => (configMode = !configMode)}
+				onclick={() => {
+					if (!configMode) collapsed = false;
+					configMode = !configMode;
+				}}
 				title={configMode ? 'Done configuring' : 'Configure display fields'}
 			>
 				<Icon
