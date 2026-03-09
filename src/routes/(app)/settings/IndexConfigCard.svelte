@@ -44,10 +44,7 @@
 </script>
 
 <div class="rounded-lg border border-base-300 bg-base-100">
-	<button
-		class="flex w-full items-center gap-2 px-3 py-2 text-left"
-		onclick={toggle}
-	>
+	<button class="flex w-full items-center gap-2 px-3 py-3 text-left" onclick={toggle}>
 		<Icon
 			icon={expanded ? 'lucide:chevron-down' : 'lucide:chevron-right'}
 			width="14"
@@ -67,7 +64,7 @@
 						<span>Level Field</span>
 						<input
 							type="text"
-							class="input-bordered input w-full input-sm"
+							class="input-bordered input input-sm w-full"
 							bind:value={levelField}
 						/>
 					</label>
@@ -75,7 +72,7 @@
 						<span>Timestamp Field</span>
 						<input
 							type="text"
-							class="input-bordered input w-full input-sm"
+							class="input-bordered input input-sm w-full"
 							bind:value={timestampField}
 						/>
 					</label>
@@ -83,17 +80,13 @@
 						<span>Message Field</span>
 						<input
 							type="text"
-							class="input-bordered input w-full input-sm"
+							class="input-bordered input input-sm w-full"
 							bind:value={messageField}
 						/>
 					</label>
 				</div>
 				<div class="mt-2 flex justify-end">
-					<button
-						class="btn btn-sm btn-primary"
-						onclick={save}
-						disabled={saving}
-					>
+					<button class="btn btn-sm btn-primary" onclick={save} disabled={saving}>
 						{saving ? 'Saving...' : 'Save'}
 					</button>
 				</div>

@@ -40,6 +40,13 @@
 	let searchStartTimestamp = $state<number | undefined>(undefined);
 	let searchEndTimestamp = $state<number | undefined>(undefined);
 	let wrapMode = $state<'none' | 'wrap' | 'pretty'>('none');
+	let copied = $state(false);
+
+	function shareQuery() {
+		navigator.clipboard.writeText(window.location.href);
+		copied = true;
+		setTimeout(() => (copied = false), 2000);
+	}
 
 	let fieldConfig = $state({
 		levelField: 'level',
@@ -354,13 +361,23 @@
 					{/each}
 				</select>
 
-				<input
-					type="text"
-					class="input-bordered input input-sm min-w-0 flex-1"
-					placeholder="Lucene query (e.g. level:error AND service:api)"
-					bind:value={queryInput}
-					onkeydown={handleKeydown}
-				/>
+				<div class="join">
+					{#each [['none', 'No wrap'], ['wrap', 'Wrap'], ['pretty', 'Pretty']] as [mode, label] (mode)}
+						<button
+							class="btn join-item w-18 btn-xs {wrapMode === mode ? 'btn-primary' : ''}"
+							onclick={() => (wrapMode = mode as typeof wrapMode)}
+						>
+							{label}
+						</button>
+					{/each}
+				</div>
+
+				<button
+					class="btn btn-sm"
+					onclick={shareQuery}
+				>
+					{copied ? 'Copied!' : 'Share'}
+				</button>
 
 				<TimeRangePicker
 					value={timeRange}
@@ -378,19 +395,18 @@
 				</button>
 			</div>
 
-			<div class="mt-2 flex w-full items-center justify-between">
-				<div class="join">
-					{#each [['none', 'No wrap'], ['wrap', 'Wrap'], ['pretty', 'Pretty']] as [mode, label] (mode)}
-						<button
-							class="btn join-item w-18 btn-xs {wrapMode === mode ? 'btn-primary' : ''}"
-							onclick={() => (wrapMode = mode as typeof wrapMode)}
-						>
-							{label}
-						</button>
-					{/each}
-				</div>
+			<div class="mt-2 flex w-full items-center gap-2">
+				<input
+					type="text"
+					class="input-bordered input input-sm min-w-0 flex-1"
+					placeholder="Lucene query (e.g. level:error AND service:api)"
+					bind:value={queryInput}
+					onkeydown={handleKeydown}
+				/>
 				{#if hasSearched}
-					<span class="text-xs text-base-content/50">{numHits.toLocaleString()} hits</span>
+					<span class="text-xs whitespace-nowrap text-base-content/50"
+						>{numHits.toLocaleString()} hits</span
+					>
 				{/if}
 			</div>
 		</div>
