@@ -45,37 +45,49 @@
 </script>
 
 <div class="h-full overflow-y-auto">
-<div class="mx-auto w-full max-w-6xl px-4 py-8">
-	<section>
-		<div class="flex items-center justify-between py-4">
-			<div>
-				<h2 class="text-xl font-semibold">Sources</h2>
-				<p class="text-sm text-base-content/60">Manage your Quickwit data sources</p>
+	<div class="mx-auto w-full max-w-6xl px-4 py-8">
+		<section>
+			<div class="flex items-center justify-between py-4">
+				<div>
+					<h2 class="text-xl font-semibold">Sources</h2>
+					<p class="text-sm text-base-content/60">Manage your Quickwit data sources</p>
+				</div>
+				<button class="btn btn-sm btn-accent" onclick={startAdd} disabled={addingNew}>Add</button>
 			</div>
-			<button class="btn btn-accent btn-sm" onclick={startAdd} disabled={addingNew}>Add</button>
-		</div>
 
-		<div class="flex flex-col gap-3">
-			{#if addingNew}
-				<SourceCard
-					source={{ id: 0, name: '', url: '', indexName: '', levelField: 'level', timestampField: 'timestamp', messageField: 'message', createdAt: new Date(), updatedAt: new Date() }}
-					editing={true}
-					isNew={true}
-					onsave={(s) => handleNewSave(s)}
-					oncancel={handleNewCancel}
-				/>
-			{/if}
+			<div class="flex flex-col gap-3">
+				{#if addingNew}
+					<SourceCard
+						source={{
+							id: 0,
+							name: '',
+							url: '',
+							indexName: '',
+							levelField: 'level',
+							timestampField: 'timestamp',
+							messageField: 'message',
+							createdAt: new Date(),
+							updatedAt: new Date()
+						}}
+						editing={true}
+						isNew={true}
+						onsave={(s) => handleNewSave(s)}
+						oncancel={handleNewCancel}
+					/>
+				{/if}
 
-			{#if !loaded}
-				<p class="text-sm text-base-content/60">Loading sources...</p>
-			{:else if sources.length === 0 && !addingNew}
-				<p class="text-sm text-base-content/60">No sources configured yet. Add one to get started.</p>
-			{:else}
-				{#each sources as source (source.id)}
-					<SourceCard {source} onsave={handleSave} ondelete={handleDelete} />
-				{/each}
-			{/if}
-		</div>
-	</section>
-</div>
+				{#if !loaded}
+					<p class="text-sm text-base-content/60">Loading sources...</p>
+				{:else if sources.length === 0 && !addingNew}
+					<p class="text-sm text-base-content/60">
+						No sources configured yet. Add one to get started.
+					</p>
+				{:else}
+					{#each sources as source (source.id)}
+						<SourceCard {source} onsave={handleSave} ondelete={handleDelete} />
+					{/each}
+				{/if}
+			</div>
+		</section>
+	</div>
 </div>

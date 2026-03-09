@@ -8,7 +8,7 @@
 		<h2 class="card-title justify-center text-2xl">Sign Up</h2>
 
 		{#each signUp.fields.allIssues() as issue}
-			<div class="alert alert-error text-sm">{issue.message}</div>
+			<div class="alert text-sm alert-error">{issue.message}</div>
 		{/each}
 
 		<form {...signUp.preflight(signUpSchema)} class="flex flex-col gap-4">
@@ -39,7 +39,7 @@
 				/>
 			</label>
 
-			<button class="btn btn-neutral w-full" disabled={!!signUp.pending}>
+			<button class="btn w-full btn-neutral" disabled={!!signUp.pending}>
 				{signUp.pending ? 'Creating account...' : 'Sign Up'}
 			</button>
 		</form>

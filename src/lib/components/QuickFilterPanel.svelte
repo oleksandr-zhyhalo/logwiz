@@ -10,7 +10,8 @@
 		onfilter,
 		availableFields = [],
 		onconfigchange,
-		onsearch
+		onsearch,
+		pinnedFields = []
 	}: {
 		fields: string[];
 		aggregations: Record<string, string[]>;
@@ -19,6 +20,7 @@
 		availableFields?: { name: string; type: string }[];
 		onconfigchange?: (fields: string[]) => void;
 		onsearch?: (field: string, searchTerm: string) => Promise<string[]>;
+		pinnedFields?: string[];
 	} = $props();
 
 	let collapsed = $state(false);
@@ -89,6 +91,15 @@
 		}
 	});
 
+	let pinnedSet = $derived(new Set(pinnedFields));
+	let pinnedConfigFields = $derived(configFields.filter((f) => pinnedSet.has(f.name)));
+	let draggableConfigFields = $state<{ id: string; name: string }[]>([]);
+
+	// Keep draggableConfigFields in sync with configFields changes (from enter/add/remove)
+	$effect(() => {
+		draggableConfigFields = configFields.filter((f) => !pinnedSet.has(f.name));
+	});
+
 	let filteredConfigAvailable = $derived(
 		availableFields.filter((f) => !configFields.some((a) => a.name === f.name))
 	);
@@ -102,12 +113,13 @@
 		configMode = false;
 	}
 
-	function handleConfigDndConsider(e: CustomEvent<{ items: typeof configFields }>) {
-		configFields = e.detail.items;
+	function handleConfigDndConsider(e: CustomEvent<{ items: typeof draggableConfigFields }>) {
+		draggableConfigFields = e.detail.items;
 	}
 
-	function handleConfigDndFinalize(e: CustomEvent<{ items: typeof configFields }>) {
-		configFields = e.detail.items;
+	function handleConfigDndFinalize(e: CustomEvent<{ items: typeof draggableConfigFields }>) {
+		draggableConfigFields = e.detail.items;
+		configFields = [...pinnedConfigFields, ...draggableConfigFields];
 		onconfigchange?.(configFields.map((f) => f.name));
 	}
 
@@ -117,6 +129,7 @@
 	}
 
 	function removeConfigField(name: string) {
+		if (pinnedSet.has(name)) return;
 		configFields = configFields.filter((f) => f.name !== name);
 		onconfigchange?.(configFields.map((f) => f.name));
 	}
@@ -204,26 +217,46 @@
 						{#if configFields.length === 0}
 							<p class="px-1 py-2 text-xs text-base-content/30">No filter fields</p>
 						{:else}
-							<div
-								use:dndzone={{ items: configFields, flipDurationMs: 150, type: 'config-fields' }}
-								onconsider={handleConfigDndConsider}
-								onfinalize={handleConfigDndFinalize}
-								class="flex flex-col gap-1"
-							>
-								{#each configFields as field (field.id)}
+							<div class="flex flex-col gap-1">
+								{#each pinnedConfigFields as field (field.id)}
 									<div class="flex items-center gap-1 rounded bg-base-200 px-2 py-1 text-xs">
 										<Icon
-											icon="lucide:grip-vertical"
+											icon="lucide:pin"
 											width="12"
 											height="12"
-											class="shrink-0 cursor-grab text-base-content/40"
+											class="shrink-0 text-base-content/30"
 										/>
 										<span class="flex-1 truncate">{field.name}</span>
-										<button class="btn p-0 btn-ghost btn-xs" onclick={() => removeConfigField(field.name)}>
-											<Icon icon="lucide:x" width="12" height="12" />
-										</button>
 									</div>
 								{/each}
+								<div
+									use:dndzone={{
+										items: draggableConfigFields,
+										flipDurationMs: 150,
+										type: 'config-fields'
+									}}
+									onconsider={handleConfigDndConsider}
+									onfinalize={handleConfigDndFinalize}
+									class="flex flex-col gap-1"
+								>
+									{#each draggableConfigFields as field (field.id)}
+										<div class="flex items-center gap-1 rounded bg-base-200 px-2 py-1 text-xs">
+											<Icon
+												icon="lucide:grip-vertical"
+												width="12"
+												height="12"
+												class="shrink-0 cursor-grab text-base-content/40"
+											/>
+											<span class="flex-1 truncate">{field.name}</span>
+											<button
+												class="btn p-0 btn-ghost btn-xs"
+												onclick={() => removeConfigField(field.name)}
+											>
+												<Icon icon="lucide:x" width="12" height="12" />
+											</button>
+										</div>
+									{/each}
+								</div>
 							</div>
 						{/if}
 					</div>

@@ -49,8 +49,15 @@
 	);
 
 	let panelAvailableFields = $derived(indexFields.filter((f) => !excludedFields.has(f.name)));
-	// let quickFilterAvailableFields = $derived(panelAvailableFields.filter((f) => f.fast));
-	let quickFilterAvailableFields = $derived(panelAvailableFields);
+	let quickFilterExcludedFields = $derived(
+		new Set([
+			selectedSource?.timestampField ?? 'timestamp',
+			selectedSource?.messageField ?? 'message'
+		])
+	);
+	let quickFilterAvailableFields = $derived(
+		indexFields.filter((f) => !quickFilterExcludedFields.has(f.name))
+	);
 
 	let extraFieldNames = $derived(activeFields.map((f) => f.name));
 
@@ -112,10 +119,12 @@
 			indexFields = fields;
 			activeFields = pref.displayFields.map((name) => ({ id: name, name }));
 
-			// Load quick filter fields; default to source's levelField
-			quickFilterFields = pref.quickFilterFields.length > 0
-				? pref.quickFilterFields
-				: [selectedSource?.levelField ?? 'level'];
+			// Load quick filter fields; ensure level is always first
+			const levelField = selectedSource?.levelField ?? 'level';
+			const savedFields = (
+				pref.quickFilterFields.length > 0 ? pref.quickFilterFields : [levelField]
+			).filter((f) => f !== levelField);
+			quickFilterFields = [levelField, ...savedFields];
 			search();
 		} catch {
 			indexFields = [];
@@ -146,7 +155,9 @@
 
 	let quickFilterSaveTimeout: ReturnType<typeof setTimeout>;
 	function handleQuickFilterFieldsChange(fields: string[]) {
-		quickFilterFields = fields;
+		const levelField = selectedSource?.levelField ?? 'level';
+		const otherFields = fields.filter((f) => f !== levelField);
+		quickFilterFields = [levelField, ...otherFields];
 		// Clean aggregations/activeFilters for removed fields
 		const fieldSet = new Set(fields);
 		aggregations = Object.fromEntries(
@@ -268,7 +279,9 @@
 </script>
 
 <div class="flex h-full w-full">
-	<div class="flex h-full w-56 shrink-0 flex-col overflow-y-auto border-r border-base-300 bg-base-100">
+	<div
+		class="flex h-full w-56 shrink-0 flex-col overflow-y-auto border-r border-base-300 bg-base-100"
+	>
 		<QuickFilterPanel
 			fields={quickFilterFields}
 			{aggregations}
@@ -277,6 +290,7 @@
 			availableFields={quickFilterAvailableFields}
 			onconfigchange={handleQuickFilterFieldsChange}
 			onsearch={handleFieldValueSearch}
+			pinnedFields={[selectedSource?.levelField ?? 'level']}
 		/>
 		<FieldPanel
 			availableFields={panelAvailableFields}
@@ -328,7 +342,7 @@
 				<div class="join">
 					{#each [['none', 'No wrap'], ['wrap', 'Wrap'], ['pretty', 'Pretty']] as [mode, label] (mode)}
 						<button
-							class="btn btn-xs join-item w-18 {wrapMode === mode ? 'btn-primary' : ''}"
+							class="btn join-item w-18 btn-xs {wrapMode === mode ? 'btn-primary' : ''}"
 							onclick={() => (wrapMode = mode as typeof wrapMode)}
 						>
 							{label}

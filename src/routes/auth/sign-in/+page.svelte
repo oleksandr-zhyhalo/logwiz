@@ -8,7 +8,7 @@
 		<h2 class="card-title justify-center text-2xl">Sign In</h2>
 
 		{#each signIn.fields.allIssues() as issue}
-			<div class="alert alert-error text-sm">{issue.message}</div>
+			<div class="alert text-sm alert-error">{issue.message}</div>
 		{/each}
 
 		<form {...signIn.preflight(signInSchema)} class="flex flex-col gap-4">
@@ -30,7 +30,7 @@
 				/>
 			</label>
 
-			<button class="btn btn-neutral w-full" disabled={!!signIn.pending}>
+			<button class="btn w-full btn-neutral" disabled={!!signIn.pending}>
 				{signIn.pending ? 'Signing in...' : 'Sign In'}
 			</button>
 		</form>

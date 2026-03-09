@@ -51,8 +51,18 @@
 
 	const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 	const MONTHS = [
-		'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-		'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+		'Jan',
+		'Feb',
+		'Mar',
+		'Apr',
+		'May',
+		'Jun',
+		'Jul',
+		'Aug',
+		'Sep',
+		'Oct',
+		'Nov',
+		'Dec'
 	];
 
 	function prevMonth() {
@@ -125,7 +135,7 @@
 				{@const inRange = isInRange(day)}
 				{@const disabled = isDisabled(day)}
 				<button
-					class="btn btn-ghost btn-xs h-8 {isSelected ? 'btn-primary' : ''} {inRange && !isSelected
+					class="btn h-8 btn-ghost btn-xs {isSelected ? 'btn-primary' : ''} {inRange && !isSelected
 						? 'bg-primary/20'
 						: ''}"
 					{disabled}

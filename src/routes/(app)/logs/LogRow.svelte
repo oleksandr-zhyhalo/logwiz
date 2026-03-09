@@ -113,23 +113,27 @@
 </script>
 
 <div
-	class="cursor-pointer border-l-4 pl-3 border-b border-base-content/5 font-mono text-[13px] leading-[22px] hover:bg-base-content/[0.07] {severityBorderColor(severity)} {wrapMode === 'none' ? 'flex items-stretch' : ''}"
+	class="cursor-pointer border-b border-l-4 border-base-content/5 pl-3 font-mono text-[13px] leading-[22px] hover:bg-base-content/[0.07] {severityBorderColor(
+		severity
+	)} {wrapMode === 'none' ? 'flex items-stretch' : ''}"
 >
 	<span class="shrink-0 py-px text-base-content/40">{extractTimestamp(hit)}</span>
 	{#each extraFields as field (field)}
 		<span
 			class="inline-block shrink-0 truncate py-px pl-2 align-top"
 			style="width: {columnWidths[field] ?? 'auto'}ch"
-		>{formatFieldValue(getNestedValue(hit, field))}</span>
+			>{formatFieldValue(getNestedValue(hit, field))}</span
+		>
 	{/each}
 	{#if prettyJson}
-		<span class="py-px pl-2 text-base-content/80 break-all whitespace-pre-wrap">
+		<span class="py-px pl-2 break-all whitespace-pre-wrap text-base-content/80">
 			<JsonHighlight code={prettyJson} />
 		</span>
 	{:else}
 		<span
 			class="py-px pl-2 text-base-content/80 {wrapMode !== 'none'
 				? 'break-all whitespace-pre-wrap'
-				: 'whitespace-nowrap'}">{formatContent(hit, wrapMode)}</span>
+				: 'whitespace-nowrap'}">{formatContent(hit, wrapMode)}</span
+		>
 	{/if}
 </div>

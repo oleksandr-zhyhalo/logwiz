@@ -93,23 +93,31 @@
 
 <div class="relative" bind:this={container}>
 	<!-- Trigger button -->
-	<button class="btn btn-sm gap-1 border-base-content/20 bg-base-100 font-normal" onclick={toggle}>
+	<button class="btn gap-1 border-base-content/20 bg-base-100 font-normal btn-sm" onclick={toggle}>
 		<Icon icon="mdi:clock-outline" class="text-base" />
 		<span class="text-sm">{buttonLabel}</span>
-		<Icon icon="mdi:chevron-down" class="text-base transition-transform {open ? 'rotate-180' : ''}" />
+		<Icon
+			icon="mdi:chevron-down"
+			class="text-base transition-transform {open ? 'rotate-180' : ''}"
+		/>
 	</button>
 
 	<!-- Dropdown panel -->
 	{#if open}
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div class="absolute right-0 top-full z-50 mt-1 max-h-[calc(100vh-120px)] overflow-y-auto rounded-lg border border-base-300 bg-base-100 shadow-lg" onclick={(e) => e.stopPropagation()}>
+		<div
+			class="absolute top-full right-0 z-50 mt-1 max-h-[calc(100vh-120px)] overflow-y-auto rounded-lg border border-base-300 bg-base-100 shadow-lg"
+			onclick={(e) => e.stopPropagation()}
+		>
 			{#if view === 'presets'}
 				<!-- Preset list -->
 				<div class="w-72 py-1">
 					{#each TIME_PRESETS as preset (preset.code)}
 						{@const isActive = value.type === 'relative' && value.preset === preset.code}
 						<button
-							class="flex w-full items-center justify-between px-4 py-2 text-sm hover:bg-base-200 {isActive ? 'bg-primary/10 text-primary' : ''}"
+							class="flex w-full items-center justify-between px-4 py-2 text-sm hover:bg-base-200 {isActive
+								? 'bg-primary/10 text-primary'
+								: ''}"
 							onclick={() => selectPreset(preset.code)}
 						>
 							<span>{preset.label}</span>
@@ -119,7 +127,10 @@
 
 					<div class="mt-1 border-t border-base-300 pt-1">
 						<button
-							class="flex w-full items-center px-4 py-2 text-sm hover:bg-base-200 {value.type === 'absolute' ? 'text-primary' : ''}"
+							class="flex w-full items-center px-4 py-2 text-sm hover:bg-base-200 {value.type ===
+							'absolute'
+								? 'text-primary'
+								: ''}"
 							onclick={() => (view = 'custom')}
 						>
 							Custom Date Range
@@ -130,15 +141,12 @@
 				<!-- Custom date range -->
 				<div class="p-3">
 					<div class="mb-2 flex items-center justify-between">
-						<button
-							class="btn btn-ghost btn-xs gap-1"
-							onclick={() => (view = 'presets')}
-						>
+						<button class="btn gap-1 btn-ghost btn-xs" onclick={() => (view = 'presets')}>
 							<Icon icon="mdi:arrow-left" class="text-sm" />
 							Back to presets
 						</button>
 						<button
-							class="btn btn-primary btn-sm"
+							class="btn btn-sm btn-primary"
 							disabled={!fromDate || !toDate}
 							onclick={applyCustomRange}
 						>
@@ -157,7 +165,7 @@
 							/>
 							<input
 								type="time"
-								class="input input-bordered input-xs mt-1 w-full"
+								class="input-bordered input input-xs mt-1 w-full"
 								bind:value={fromTime}
 							/>
 						</div>
@@ -172,7 +180,7 @@
 							/>
 							<input
 								type="time"
-								class="input input-bordered input-xs mt-1 w-full"
+								class="input-bordered input input-xs mt-1 w-full"
 								bind:value={toTime}
 							/>
 						</div>
@@ -185,13 +193,13 @@
 				<Icon icon="mdi:clock-outline" class="text-sm text-base-content/50" />
 				<div class="join">
 					<button
-						class="btn btn-xs join-item {timezoneMode === 'utc' ? 'btn-primary' : ''}"
+						class="btn join-item btn-xs {timezoneMode === 'utc' ? 'btn-primary' : ''}"
 						onclick={() => ontimezonechange('utc')}
 					>
 						UTC
 					</button>
 					<button
-						class="btn btn-xs join-item {timezoneMode === 'local' ? 'btn-primary' : ''}"
+						class="btn join-item btn-xs {timezoneMode === 'local' ? 'btn-primary' : ''}"
 						onclick={() => ontimezonechange('local')}
 					>
 						Browser time

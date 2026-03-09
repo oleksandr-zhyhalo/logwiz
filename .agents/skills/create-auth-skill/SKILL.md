@@ -18,6 +18,7 @@ Before writing any code, gather requirements by scanning the project and asking 
 ### Step 1: Scan the project
 
 Analyze the codebase to auto-detect:
+
 - **Framework** — Look for `next.config`, `svelte.config`, `nuxt.config`, `astro.config`, `vite.config`, or Express/Hono entry files.
 - **Database/ORM** — Look for `prisma/schema.prisma`, `drizzle.config`, `package.json` deps (`pg`, `mysql2`, `better-sqlite3`, `mongoose`, `mongodb`).
 - **Existing auth** — Look for existing auth libraries (`next-auth`, `lucia`, `clerk`, `supabase/auth`, `firebase/auth`) in `package.json` or imports.
@@ -75,8 +76,9 @@ Use the `AskQuestion` tool to ask the user **all applicable questions in a singl
    - `allow_multiple: true`
 
 10. **Auth UI style** (always ask)
-   - Prompt: "What style do you want for the auth pages? Pick one or describe your own."
-   - Options: Minimal & clean | Centered card with background | Split layout (form + hero image) | Floating / glassmorphism | Other (I'll describe)
+
+- Prompt: "What style do you want for the auth pages? Pick one or describe your own."
+- Options: Minimal & clean | Centered card with background | Split layout (form + hero image) | Floating / glassmorphism | Other (I'll describe)
 
 ### Step 3: Summarize the plan
 
@@ -180,15 +182,18 @@ Add OAuth secrets as needed: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GOOGLE
 **Location:** `lib/auth.ts` or `src/lib/auth.ts`
 
 **Minimal config needs:**
+
 - `database` - Connection or adapter
 - `emailAndPassword: { enabled: true }` - For email/password auth
 
 **Standard config adds:**
+
 - `socialProviders` - OAuth providers (google, github, etc.)
 - `emailVerification.sendVerificationEmail` - Email verification handler
 - `emailAndPassword.sendResetPassword` - Password reset handler
 
 **Full config adds:**
+
 - `plugins` - Array of feature plugins
 - `session` - Expiry, cookie cache settings
 - `account.accountLinking` - Multi-provider linking
@@ -217,14 +222,14 @@ Add OAuth secrets as needed: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GOOGLE
 
 ## Route Handler Setup
 
-| Framework | File | Handler |
-|-----------|------|---------|
+| Framework          | File                             | Handler                                          |
+| ------------------ | -------------------------------- | ------------------------------------------------ |
 | Next.js App Router | `app/api/auth/[...all]/route.ts` | `toNextJsHandler(auth)` → export `{ GET, POST }` |
-| Next.js Pages | `pages/api/auth/[...all].ts` | `toNextJsHandler(auth)` → default export |
-| Express | Any file | `app.all("/api/auth/*", toNodeHandler(auth))` |
-| SvelteKit | `src/hooks.server.ts` | `svelteKitHandler(auth)` |
-| SolidStart | Route file | `solidStartHandler(auth)` |
-| Hono | Route file | `auth.handler(c.req.raw)` |
+| Next.js Pages      | `pages/api/auth/[...all].ts`     | `toNextJsHandler(auth)` → default export         |
+| Express            | Any file                         | `app.all("/api/auth/*", toNodeHandler(auth))`    |
+| SvelteKit          | `src/hooks.server.ts`            | `svelteKitHandler(auth)`                         |
+| SolidStart         | Route file                       | `solidStartHandler(auth)`                        |
+| Hono               | Route file                       | `auth.handler(c.req.raw)`                        |
 
 **Next.js Server Components:** Add `nextCookies()` plugin to auth config.
 
@@ -232,11 +237,11 @@ Add OAuth secrets as needed: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GOOGLE
 
 ## Database Migrations
 
-| Adapter | Command |
-|---------|---------|
-| Built-in Kysely | `npx @better-auth/cli@latest migrate` (applies directly) |
-| Prisma | `npx @better-auth/cli@latest generate --output prisma/schema.prisma` then `npx prisma migrate dev` |
-| Drizzle | `npx @better-auth/cli@latest generate --output src/db/auth-schema.ts` then `npx drizzle-kit push` |
+| Adapter         | Command                                                                                            |
+| --------------- | -------------------------------------------------------------------------------------------------- |
+| Built-in Kysely | `npx @better-auth/cli@latest migrate` (applies directly)                                           |
+| Prisma          | `npx @better-auth/cli@latest generate --output prisma/schema.prisma` then `npx prisma migrate dev` |
+| Drizzle         | `npx @better-auth/cli@latest generate --output src/db/auth-schema.ts` then `npx drizzle-kit push`  |
 
 **Re-run after adding plugins.**
 
@@ -244,28 +249,28 @@ Add OAuth secrets as needed: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GOOGLE
 
 ## Database Adapters
 
-| Database | Setup |
-|----------|-------|
-| SQLite | Pass `better-sqlite3` or `bun:sqlite` instance directly |
-| PostgreSQL | Pass `pg.Pool` instance directly |
-| MySQL | Pass `mysql2` pool directly |
-| Prisma | `prismaAdapter(prisma, { provider: "postgresql" })` from `better-auth/adapters/prisma` |
-| Drizzle | `drizzleAdapter(db, { provider: "pg" })` from `better-auth/adapters/drizzle` |
-| MongoDB | `mongodbAdapter(db)` from `better-auth/adapters/mongodb` |
+| Database   | Setup                                                                                  |
+| ---------- | -------------------------------------------------------------------------------------- |
+| SQLite     | Pass `better-sqlite3` or `bun:sqlite` instance directly                                |
+| PostgreSQL | Pass `pg.Pool` instance directly                                                       |
+| MySQL      | Pass `mysql2` pool directly                                                            |
+| Prisma     | `prismaAdapter(prisma, { provider: "postgresql" })` from `better-auth/adapters/prisma` |
+| Drizzle    | `drizzleAdapter(db, { provider: "pg" })` from `better-auth/adapters/drizzle`           |
+| MongoDB    | `mongodbAdapter(db)` from `better-auth/adapters/mongodb`                               |
 
 ---
 
 ## Common Plugins
 
-| Plugin | Server Import | Client Import | Purpose |
-|--------|---------------|---------------|---------|
-| `twoFactor` | `better-auth/plugins` | `twoFactorClient` | 2FA with TOTP/OTP |
-| `organization` | `better-auth/plugins` | `organizationClient` | Teams/orgs |
-| `admin` | `better-auth/plugins` | `adminClient` | User management |
-| `bearer` | `better-auth/plugins` | - | API token auth |
-| `openAPI` | `better-auth/plugins` | - | API docs |
-| `passkey` | `@better-auth/passkey` | `passkeyClient` | WebAuthn |
-| `sso` | `@better-auth/sso` | - | Enterprise SSO |
+| Plugin         | Server Import          | Client Import        | Purpose           |
+| -------------- | ---------------------- | -------------------- | ----------------- |
+| `twoFactor`    | `better-auth/plugins`  | `twoFactorClient`    | 2FA with TOTP/OTP |
+| `organization` | `better-auth/plugins`  | `organizationClient` | Teams/orgs        |
+| `admin`        | `better-auth/plugins`  | `adminClient`        | User management   |
+| `bearer`       | `better-auth/plugins`  | -                    | API token auth    |
+| `openAPI`      | `better-auth/plugins`  | -                    | API docs          |
+| `passkey`      | `@better-auth/passkey` | `passkeyClient`      | WebAuthn          |
+| `sso`          | `@better-auth/sso`     | -                    | Enterprise SSO    |
 
 **Plugin pattern:** Server plugin + client plugin + run migrations.
 
@@ -274,6 +279,7 @@ Add OAuth secrets as needed: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GOOGLE
 ## Auth UI Implementation
 
 **Sign in flow:**
+
 1. `signIn.email({ email, password })` or `signIn.social({ provider, callbackURL })`
 2. Handle `error` in response
 3. Redirect on success
@@ -302,13 +308,13 @@ Add OAuth secrets as needed: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GOOGLE
 
 ## Troubleshooting
 
-| Issue | Fix |
-|-------|-----|
-| "Secret not set" | Add `BETTER_AUTH_SECRET` env var |
-| "Invalid Origin" | Add domain to `trustedOrigins` |
-| Cookies not setting | Check `baseURL` matches domain; enable secure cookies in prod |
-| OAuth callback errors | Verify redirect URIs in provider dashboard |
-| Type errors after adding plugin | Re-run CLI generate/migrate |
+| Issue                           | Fix                                                           |
+| ------------------------------- | ------------------------------------------------------------- |
+| "Secret not set"                | Add `BETTER_AUTH_SECRET` env var                              |
+| "Invalid Origin"                | Add domain to `trustedOrigins`                                |
+| Cookies not setting             | Check `baseURL` matches domain; enable secure cookies in prod |
+| OAuth callback errors           | Verify redirect URIs in provider dashboard                    |
+| Type errors after adding plugin | Re-run CLI generate/migrate                                   |
 
 ---
 

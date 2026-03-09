@@ -40,7 +40,7 @@
 
 {#if loading}
 	<div class="flex items-center gap-2 py-2">
-		<span class="loading loading-spinner loading-xs"></span>
+		<span class="loading loading-xs loading-spinner"></span>
 		<span class="text-xs text-base-content/50">Loading fields...</span>
 	</div>
 {:else}
@@ -52,10 +52,13 @@
 			class="flex flex-wrap gap-1.5"
 		>
 			{#each activeFields as field (field.id)}
-				<span class="badge badge-primary gap-1 pr-1">
+				<span class="badge gap-1 pr-1 badge-primary">
 					<Icon icon="lucide:grip-vertical" width="10" height="10" class="cursor-grab opacity-60" />
 					{field.name}
-					<button class="cursor-pointer opacity-60 hover:opacity-100" onclick={() => removeField(field.name)}>
+					<button
+						class="cursor-pointer opacity-60 hover:opacity-100"
+						onclick={() => removeField(field.name)}
+					>
 						<Icon icon="lucide:x" width="10" height="10" />
 					</button>
 				</span>
@@ -69,7 +72,7 @@
 		<div class="mt-2 flex flex-wrap gap-1.5">
 			{#each filteredAvailable as field (field.name)}
 				<button
-					class="badge badge-outline badge-ghost gap-1 cursor-pointer hover:badge-primary"
+					class="badge cursor-pointer gap-1 badge-ghost badge-outline hover:badge-primary"
 					onclick={() => addField(field.name)}
 				>
 					<Icon icon="lucide:plus" width="10" height="10" />

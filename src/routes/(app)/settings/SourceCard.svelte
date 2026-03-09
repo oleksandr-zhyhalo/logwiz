@@ -1,12 +1,13 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import {
-		updateSource,
-		deleteSource,
-		testSourceConnection
-	} from '$lib/api/sources.remote';
+	import { updateSource, deleteSource, testSourceConnection } from '$lib/api/sources.remote';
 	import ChipFieldSelector from '$lib/components/ChipFieldSelector.svelte';
-	import { getPreference, saveDisplayFields, saveQuickFilterFields, getIndexFields } from '$lib/api/preferences.remote';
+	import {
+		getPreference,
+		saveDisplayFields,
+		saveQuickFilterFields,
+		getIndexFields
+	} from '$lib/api/preferences.remote';
 	import type { Source } from '$lib/types';
 
 	let {
@@ -131,9 +132,25 @@
 		errorMessage = '';
 		try {
 			if (isNew) {
-				await onsave?.({ ...source, name, url, indexName, levelField, timestampField, messageField });
+				await onsave?.({
+					...source,
+					name,
+					url,
+					indexName,
+					levelField,
+					timestampField,
+					messageField
+				});
 			} else {
-				const updated = await updateSource({ id: source.id, name, url, indexName, levelField, timestampField, messageField });
+				const updated = await updateSource({
+					id: source.id,
+					name,
+					url,
+					indexName,
+					levelField,
+					timestampField,
+					messageField
+				});
 				onsave?.(updated);
 				isEditing = false;
 			}
@@ -173,30 +190,60 @@
 			<div class="flex flex-col gap-3">
 				<label class="floating-label">
 					<span>Name</span>
-					<input type="text" class="input input-bordered w-full" placeholder="Name" bind:value={name} />
+					<input
+						type="text"
+						class="input-bordered input w-full"
+						placeholder="Name"
+						bind:value={name}
+					/>
 				</label>
 				<label class="floating-label">
 					<span>Quickwit URL</span>
-					<input type="url" class="input input-bordered w-full" placeholder="https://quickwit:7280/api/v1" bind:value={url} />
+					<input
+						type="url"
+						class="input-bordered input w-full"
+						placeholder="https://quickwit:7280/api/v1"
+						bind:value={url}
+					/>
 				</label>
 				<label class="floating-label">
 					<span>Index Name</span>
-					<input type="text" class="input input-bordered w-full" placeholder="my-index" bind:value={indexName} />
+					<input
+						type="text"
+						class="input-bordered input w-full"
+						placeholder="my-index"
+						bind:value={indexName}
+					/>
 				</label>
 
 				<div class="divider my-1 text-xs text-base-content/40">Field Mapping</div>
 				<div class="grid grid-cols-3 gap-2">
 					<label class="floating-label">
 						<span>Level Field</span>
-						<input type="text" class="input input-bordered w-full" placeholder="level" bind:value={levelField} />
+						<input
+							type="text"
+							class="input-bordered input w-full"
+							placeholder="level"
+							bind:value={levelField}
+						/>
 					</label>
 					<label class="floating-label">
 						<span>Timestamp Field</span>
-						<input type="text" class="input input-bordered w-full" placeholder="timestamp" bind:value={timestampField} />
+						<input
+							type="text"
+							class="input-bordered input w-full"
+							placeholder="timestamp"
+							bind:value={timestampField}
+						/>
 					</label>
 					<label class="floating-label">
 						<span>Message Field</span>
-						<input type="text" class="input input-bordered w-full" placeholder="message" bind:value={messageField} />
+						<input
+							type="text"
+							class="input-bordered input w-full"
+							placeholder="message"
+							bind:value={messageField}
+						/>
 					</label>
 				</div>
 
@@ -207,15 +254,23 @@
 				{/if}
 
 				{#if errorMessage}
-					<div class="alert alert-error text-sm">{errorMessage}</div>
+					<div class="alert text-sm alert-error">{errorMessage}</div>
 				{/if}
 
-				<div class="flex gap-2 justify-end">
-					<button class="btn btn-sm btn-ghost" onclick={testConnection} disabled={testing || !url || !indexName}>
+				<div class="flex justify-end gap-2">
+					<button
+						class="btn btn-ghost btn-sm"
+						onclick={testConnection}
+						disabled={testing || !url || !indexName}
+					>
 						{testing ? 'Testing...' : 'Test Connection'}
 					</button>
-					<button class="btn btn-sm btn-ghost" onclick={cancelEdit}>Cancel</button>
-					<button class="btn btn-sm btn-primary" onclick={save} disabled={saving || !name || !url || !indexName}>
+					<button class="btn btn-ghost btn-sm" onclick={cancelEdit}>Cancel</button>
+					<button
+						class="btn btn-sm btn-primary"
+						onclick={save}
+						disabled={saving || !name || !url || !indexName}
+					>
 						{saving ? 'Saving...' : 'Save'}
 					</button>
 				</div>
@@ -227,10 +282,13 @@
 					<p class="text-sm text-base-content/60">{source.url} &mdash; {source.indexName}</p>
 				</div>
 				<div class="flex gap-1">
-					<button class="btn btn-sm btn-ghost" onclick={startEdit}>
+					<button class="btn btn-ghost btn-sm" onclick={startEdit}>
 						<Icon icon="lucide:pencil" width="16" height="16" />
 					</button>
-					<button class="btn btn-sm btn-ghost text-error" onclick={() => (showDeleteConfirm = true)}>
+					<button
+						class="btn text-error btn-ghost btn-sm"
+						onclick={() => (showDeleteConfirm = true)}
+					>
 						<Icon icon="lucide:trash-2" width="16" height="16" />
 					</button>
 				</div>
@@ -245,9 +303,11 @@
 						height="14"
 						class="text-base-content/40"
 					/>
-					<span class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Display Fields</span>
+					<span class="text-xs font-semibold tracking-wider text-base-content/60 uppercase"
+						>Display Fields</span
+					>
 					{#if activeDisplayFields.length > 0 && !displayFieldsExpanded}
-						<span class="badge badge-xs badge-ghost ml-1">{activeDisplayFields.length}</span>
+						<span class="ml-1 badge badge-ghost badge-xs">{activeDisplayFields.length}</span>
 					{/if}
 				</button>
 				{#if displayFieldsExpanded}
@@ -271,9 +331,11 @@
 						height="14"
 						class="text-base-content/40"
 					/>
-					<span class="text-xs font-semibold uppercase tracking-wider text-base-content/60">Quick Filters</span>
+					<span class="text-xs font-semibold tracking-wider text-base-content/60 uppercase"
+						>Quick Filters</span
+					>
 					{#if activeQuickFilterFields.length > 0 && !quickFiltersExpanded}
-						<span class="badge badge-xs badge-ghost ml-1">{activeQuickFilterFields.length}</span>
+						<span class="ml-1 badge badge-ghost badge-xs">{activeQuickFilterFields.length}</span>
 					{/if}
 				</button>
 				{#if quickFiltersExpanded}
@@ -292,9 +354,9 @@
 </div>
 
 {#if showDeleteConfirm}
-	<dialog class="modal modal-open">
+	<dialog class="modal-open modal">
 		<div class="modal-box">
-			<h3 class="font-bold text-lg">Delete Source</h3>
+			<h3 class="text-lg font-bold">Delete Source</h3>
 			<p class="py-4">Are you sure you want to delete "{source.name}"?</p>
 			<div class="modal-action">
 				<button class="btn btn-ghost" onclick={() => (showDeleteConfirm = false)}>Cancel</button>

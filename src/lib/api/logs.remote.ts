@@ -116,10 +116,13 @@ export const searchFieldValues = command(searchFieldValuesSchema, async (data) =
 
 	const result = await index.search(query);
 
-	const bucketAgg = result.aggregations?.[data.field] as { buckets?: { key: string }[] } | undefined;
+	const bucketAgg = result.aggregations?.[data.field] as
+		| { buckets?: { key: string }[] }
+		| undefined;
 	const searchLower = data.searchTerm.toLowerCase();
-	const values = (bucketAgg?.buckets?.map((b) => String(b.key)) ?? [])
-		.filter((v) => v.toLowerCase().includes(searchLower));
+	const values = (bucketAgg?.buckets?.map((b) => String(b.key)) ?? []).filter((v) =>
+		v.toLowerCase().includes(searchLower)
+	);
 
 	return { values };
 });

@@ -106,7 +106,10 @@
 									/>
 									<span class="flex-1 truncate">{field.name}</span>
 									{#if configMode}
-										<button class="btn p-0 btn-ghost btn-xs" onclick={() => removeField(field.name)}>
+										<button
+											class="btn p-0 btn-ghost btn-xs"
+											onclick={() => removeField(field.name)}
+										>
 											<Icon icon="lucide:x" width="12" height="12" />
 										</button>
 									{/if}

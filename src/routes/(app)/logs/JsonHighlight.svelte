@@ -42,7 +42,7 @@
 		{@html highlightedHtml}
 	</div>
 {:else}
-	<pre class="whitespace-pre-wrap break-all">{code}</pre>
+	<pre class="break-all whitespace-pre-wrap">{code}</pre>
 {/if}
 
 <style>

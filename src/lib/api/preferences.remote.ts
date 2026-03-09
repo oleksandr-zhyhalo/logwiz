@@ -20,12 +20,7 @@ export const getPreference = command(getPreferenceSchema, async (data) => {
 	const [pref] = await db
 		.select()
 		.from(userPreference)
-		.where(
-			and(
-				eq(userPreference.userId, user.id),
-				eq(userPreference.sourceId, data.sourceId)
-			)
-		);
+		.where(and(eq(userPreference.userId, user.id), eq(userPreference.sourceId, data.sourceId)));
 
 	return {
 		displayFields: (pref?.displayFields as string[]) ?? [],
@@ -61,12 +56,7 @@ export const deletePreference = command(deletePreferenceSchema, async (data) => 
 	const user = requireUser();
 	await db
 		.delete(userPreference)
-		.where(
-			and(
-				eq(userPreference.userId, user.id),
-				eq(userPreference.sourceId, data.sourceId)
-			)
-		);
+		.where(and(eq(userPreference.userId, user.id), eq(userPreference.sourceId, data.sourceId)));
 });
 
 export const getIndexFields = command(getIndexFieldsSchema, async (data) => {

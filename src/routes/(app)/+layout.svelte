@@ -44,19 +44,37 @@
 		class:w-64={!collapsed}
 		class:w-16={collapsed}
 	>
-		<div class="flex h-16 items-center border-b border-base-300 px-2" class:justify-between={!collapsed} class:justify-center={collapsed}>
+		<div
+			class="flex h-16 items-center border-b border-base-300 px-2"
+			class:justify-between={!collapsed}
+			class:justify-center={collapsed}
+		>
 			{#if !collapsed}
 				<p class="pl-2 text-xl font-semibold">Logwit</p>
 			{/if}
-			<button class="btn btn-ghost btn-sm btn-square" onclick={toggleSidebar} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
-				<Icon icon={collapsed ? 'lucide:panel-left-open' : 'lucide:panel-left-close'} width="16" height="16" class="opacity-70" />
+			<button
+				class="btn btn-square btn-ghost btn-sm"
+				onclick={toggleSidebar}
+				aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+			>
+				<Icon
+					icon={collapsed ? 'lucide:panel-left-open' : 'lucide:panel-left-close'}
+					width="16"
+					height="16"
+					class="opacity-70"
+				/>
 			</button>
 		</div>
 		<ul class="menu w-full flex-1 p-2" class:items-center={collapsed}>
 			{#each menuItems as item (item.href)}
 				<li class="w-full">
 					{#if collapsed}
-						<a href={item.href} class="tooltip tooltip-right flex justify-center" class:menu-active={item.active()} data-tip={item.label}>
+						<a
+							href={item.href}
+							class="tooltip tooltip-right flex justify-center"
+							class:menu-active={item.active()}
+							data-tip={item.label}
+						>
 							<Icon icon={item.icon} width="16" height="16" class="opacity-70" />
 						</a>
 					{:else}
@@ -68,13 +86,21 @@
 				</li>
 			{/each}
 		</ul>
-		<div class="border-t border-base-300 p-2" class:flex={collapsed} class:justify-center={collapsed}>
+		<div
+			class="border-t border-base-300 p-2"
+			class:flex={collapsed}
+			class:justify-center={collapsed}
+		>
 			{#if collapsed}
-				<button class="btn btn-ghost btn-sm btn-square tooltip tooltip-right" onclick={() => signOut()} data-tip="Sign Out">
+				<button
+					class="tooltip btn tooltip-right btn-square btn-ghost btn-sm"
+					onclick={() => signOut()}
+					data-tip="Sign Out"
+				>
 					<Icon icon="lucide:log-out" width="14" height="14" class="opacity-70" />
 				</button>
 			{:else}
-				<button class="btn btn-ghost btn-sm w-full" onclick={() => signOut()}>
+				<button class="btn w-full btn-ghost btn-sm" onclick={() => signOut()}>
 					<Icon icon="lucide:log-out" width="14" height="14" class="opacity-70" />
 					Sign Out
 				</button>
