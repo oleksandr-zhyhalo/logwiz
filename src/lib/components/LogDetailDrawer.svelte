@@ -2,27 +2,59 @@
 	import type { Snippet } from 'svelte';
 	import JsonHighlight from '$lib/components/JsonHighlight.svelte';
 	import Icon from '@iconify/svelte';
+	import { escapeFilterValue } from '$lib/utils';
 
 	let {
 		open = $bindable(false),
 		hit = null,
+		timestampField = 'timestamp',
+		onfilter,
 		children
 	}: {
 		open: boolean;
 		hit: Record<string, unknown> | null;
+		timestampField?: string;
+		onfilter?: (key: string, value: string, exclude: boolean) => void;
 		children: Snippet;
 	} = $props();
 
 	const drawerId = 'log-detail-drawer';
 
 	const tabs = [
-		{ id: 'overview', label: 'Overview', icon: 'lucide:table' },
+		{ id: 'parameters', label: 'Parameters', icon: 'lucide:list-tree' },
 		{ id: 'json', label: 'JSON', icon: 'lucide:braces' },
 		{ id: 'context', label: 'Context', icon: 'lucide:list' },
 		{ id: 'metrics', label: 'Metrics', icon: 'lucide:bar-chart-3' }
 	] as const;
 
-	let activeTab = $state<(typeof tabs)[number]['id']>('json');
+	function flattenObject(
+		obj: Record<string, unknown>,
+		prefix = ''
+	): [string, unknown][] {
+		const result: [string, unknown][] = [];
+		for (const [key, value] of Object.entries(obj)) {
+			const fullKey = prefix ? `${prefix}.${key}` : key;
+			if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+				result.push(...flattenObject(value as Record<string, unknown>, fullKey));
+			} else {
+				result.push([fullKey, value]);
+			}
+		}
+		return result;
+	}
+
+	const flatParams = $derived(
+		hit ? flattenObject(hit).filter(([key]) => key !== timestampField) : []
+	);
+
+	function handleFilter(key: string, value: unknown, exclude: boolean) {
+		if (value === null || value === undefined) return;
+		const str = Array.isArray(value) ? JSON.stringify(value) : String(value);
+		onfilter?.(key, escapeFilterValue(str), exclude);
+		open = false;
+	}
+
+	let activeTab = $state<(typeof tabs)[number]['id']>('parameters');
 	let copied = $state(false);
 
 	function close() {
@@ -108,8 +140,54 @@
 							</div>
 						</div>
 					{/if}
-				{:else if activeTab === 'overview'}
-					<p class="text-base-content/50 text-sm">Coming soon</p>
+				{:else if activeTab === 'parameters'}
+					{#if hit}
+						<table class="table table-sm">
+							<thead>
+								<tr>
+									<th class="w-0 pr-0"></th>
+									<th class="w-1/3 pl-0">Key</th>
+									<th>Value</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each flatParams as [key, value] (key)}
+									<tr class="group">
+										<td class="pr-0 py-0 align-middle">
+											{#if value !== null && value !== undefined}
+												<div class="flex gap-0 items-center">
+													<button
+														class="btn btn-ghost btn-xs btn-square min-h-0 h-5 w-5"
+														title="Filter for value"
+														onclick={() => handleFilter(key, value, false)}
+													>
+														<Icon icon="lucide:plus-circle" width="12" height="12" class="text-success" />
+													</button>
+													<button
+														class="btn btn-ghost btn-xs btn-square min-h-0 h-5 w-5"
+														title="Filter out value"
+														onclick={() => handleFilter(key, value, true)}
+													>
+														<Icon icon="lucide:minus-circle" width="12" height="12" class="text-error" />
+													</button>
+												</div>
+											{/if}
+										</td>
+										<td class="font-mono text-xs text-base-content/70 pl-1">{key}</td>
+										<td class="font-mono text-xs break-all">
+											{#if value === null || value === undefined}
+												<span class="text-base-content/30 italic">null</span>
+											{:else if Array.isArray(value)}
+												{JSON.stringify(value)}
+											{:else}
+												{String(value)}
+											{/if}
+										</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					{/if}
 				{:else if activeTab === 'context'}
 					<p class="text-base-content/50 text-sm">Coming soon</p>
 				{:else if activeTab === 'metrics'}

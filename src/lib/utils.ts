@@ -52,7 +52,7 @@ export function normalizeQuickwitUrl(url: string): string {
 	return url.replace(/\/api\/v1\/?$/, '');
 }
 
-function escapeFilterValue(value: string): string {
+export function escapeFilterValue(value: string): string {
 	if (/[\s:()[\]{}!+\-~^"\\*?/&|]/.test(value)) {
 		return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 	}

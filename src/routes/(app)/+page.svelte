@@ -330,7 +330,16 @@
 	}
 </script>
 
-<LogDetailDrawer bind:open={drawerOpen} hit={selectedLog}>
+<LogDetailDrawer
+	bind:open={drawerOpen}
+	hit={selectedLog}
+	timestampField={fieldConfig.timestampField}
+	onfilter={(key, value, exclude) => {
+		const clause = exclude ? `NOT ${key}:${value}` : `${key}:${value}`;
+		queryInput = queryInput ? `${queryInput} AND ${clause}` : clause;
+		navigateQuery({ query: queryInput }, true);
+	}}
+>
 	<div class="flex h-full w-full">
 		<div
 			class="flex h-full w-56 shrink-0 flex-col overflow-y-auto border-r border-base-300 bg-base-100"
