@@ -80,8 +80,34 @@
 	}
 
 	function extractMessage(doc: Record<string, unknown>): string {
-		const raw = doc[messageField];
-		if (raw !== undefined && raw !== null) return String(raw);
+		// Try direct nested access first (handles dot notation like "body.text")
+		const nested = getNestedValue(doc, messageField);
+		if (nested !== undefined && nested !== null) return String(nested);
+
+		// If dot-path access failed, try parsing JSON strings along the path
+		// This handles cases like message.text where message is '{"text":"..."}'
+		if (messageField.includes('.')) {
+			const parts = messageField.split('.');
+			let current: unknown = doc;
+			for (const part of parts) {
+				if (current === null || current === undefined) break;
+				if (typeof current === 'string') {
+					try {
+						current = JSON.parse(current);
+					} catch {
+						break;
+					}
+				}
+				if (typeof current === 'object') {
+					current = (current as Record<string, unknown>)[part];
+				} else {
+					current = undefined;
+					break;
+				}
+			}
+			if (current !== undefined && current !== null) return String(current);
+		}
+
 		return JSON.stringify(doc);
 	}
 
@@ -115,7 +141,7 @@
 </script>
 
 <div
-	class="cursor-pointer border-b border-l-4 border-base-content/5 pl-3 font-mono text-[13px] leading-[22px] hover:bg-base-content/[0.07] {severityBorderColor(
+	class="cursor-pointer border-b border-l-4 border-base-content/5 pl-3 font-['Roboto_Mono',monospace] text-[13px] leading-[22px] hover:bg-base-content/[0.07] {severityBorderColor(
 		severity
 	)} {wrapMode === 'none' ? 'flex items-stretch' : ''}"
 	role="button"

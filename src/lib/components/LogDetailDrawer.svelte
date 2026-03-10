@@ -75,7 +75,7 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<div class="drawer drawer-end">
+<div class="drawer drawer-end h-full">
 	<input
 		id={drawerId}
 		type="checkbox"
@@ -83,7 +83,7 @@
 		checked={open}
 		onchange={(e) => (open = e.currentTarget.checked)}
 	/>
-	<div class="drawer-content">
+	<div class="drawer-content h-full overflow-hidden">
 		{@render children()}
 	</div>
 	<div class="drawer-side z-50">
@@ -124,7 +124,7 @@
 									height="14"
 								/>
 							</button>
-							<div class="flex font-mono text-sm">
+							<div class="flex font-['Roboto_Mono',monospace] text-sm">
 								<div
 									class="text-base-content/30 select-none border-r border-base-300 py-3 pr-3 pl-3 text-right"
 								>
@@ -171,8 +171,8 @@
 												</div>
 											{/if}
 										</td>
-										<td class="font-mono text-xs text-base-content/70 pl-1">{key}</td>
-										<td class="font-mono text-xs break-all">
+										<td class="font-['Roboto_Mono',monospace] text-xs text-base-content/70 pl-1">{key}</td>
+										<td class="font-['Roboto_Mono',monospace] text-xs break-all">
 											{#if value === null || value === undefined}
 												<span class="text-base-content/30 italic">null</span>
 											{:else if Array.isArray(value)}
