@@ -62,7 +62,7 @@
 		return ordered;
 	});
 
-	// Build columnar data for uPlot: [timestamps, ...stackedSeries]
+	// Build columnar data for uPlot: { uplot: [timestamps, ...stackedSeries], rawSeries }
 	let columnarData = $derived.by(() => {
 		if (data.length === 0) return null;
 
@@ -85,7 +85,10 @@
 			stackedSeries.push(stacked);
 		}
 
-		return [timestamps, ...stackedSeries] as [number[], ...number[][]];
+		return {
+			uplot: [timestamps, ...stackedSeries] as [number[], ...number[][]],
+			rawSeries
+		};
 	});
 
 	function formatTime(ts: number): string {
@@ -112,6 +115,32 @@
 		return `${mo}-${day} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 	}
 
+	function formatTooltipTimestamp(ts: number): string {
+		const d = new Date(ts * 1000);
+		if (timezoneMode === 'utc') {
+			const y = d.getUTCFullYear();
+			const mo = String(d.getUTCMonth() + 1).padStart(2, '0');
+			const day = String(d.getUTCDate()).padStart(2, '0');
+			const h = String(d.getUTCHours()).padStart(2, '0');
+			const m = String(d.getUTCMinutes()).padStart(2, '0');
+			const s = String(d.getUTCSeconds()).padStart(2, '0');
+			return `${y}-${mo}-${day} ${h}:${m}:${s}`;
+		}
+		const y = d.getFullYear();
+		const mo = String(d.getMonth() + 1).padStart(2, '0');
+		const day = String(d.getDate()).padStart(2, '0');
+		const h = String(d.getHours()).padStart(2, '0');
+		const m = String(d.getMinutes()).padStart(2, '0');
+		const s = String(d.getSeconds()).padStart(2, '0');
+		return `${y}-${mo}-${day} ${h}:${m}:${s}`;
+	}
+
+	// Tooltip state
+	let tooltipVisible = $state(false);
+	let tooltipLeft = $state(0);
+	let tooltipTop = $state(0);
+	let tooltipIdx = $state<number | null>(null);
+
 	function destroyChart() {
 		if (chart) {
 			chart.destroy();
@@ -134,7 +163,7 @@
 
 		const UPlot = uPlotCtor;
 
-		const barPaths = UPlot.paths.bars!({ size: [0.8, 64], align: 0 });
+		const barPaths = UPlot.paths.bars!({ size: [0.96, 64, 1], align: 0, gap: 1 });
 
 		const series: uPlotLib.Series[] = [
 			{
@@ -150,7 +179,7 @@
 
 			series.push({
 				label: level,
-				fill: color + '99',
+				fill: color,
 				stroke: color,
 				width: 0,
 				paths: barPaths,
@@ -161,15 +190,19 @@
 			if (i > 0) {
 				bands.push({
 					series: [i + 1, i] as [number, number],
-					fill: (LEVEL_COLORS[levels[i]] ?? FALLBACK_COLOR) + '99'
+					fill: LEVEL_COLORS[levels[i]] ?? FALLBACK_COLOR
 				});
 			}
 		}
 
 		// Determine time span to choose label formatter
-		const timestamps = columnarData[0];
+		const timestamps = columnarData.uplot[0];
 		const span = timestamps.length > 1 ? timestamps[timestamps.length - 1] - timestamps[0] : 0;
 		const useDate = span > 24 * 60 * 60;
+		// Pad x-range by half a bucket so first/last bars aren't clipped
+		const bucketWidth =
+			timestamps.length > 1 ? timestamps[1] - timestamps[0] : 1;
+		const halfBucket = bucketWidth / 2;
 
 		const opts: uPlotLib.Options = {
 			width: chartWidth,
@@ -195,7 +228,8 @@
 			},
 			scales: {
 				x: {
-					time: true
+					time: true,
+					range: (_u: uPlotLib, min: number, max: number) => [min - halfBucket, max + halfBucket]
 				},
 				y: {
 					range: (_u: uPlotLib, _min: number, max: number) => [0, max || 1]
@@ -206,6 +240,8 @@
 					stroke: '#9ca3af',
 					grid: { show: false },
 					ticks: { show: false },
+					gap: 2,
+					size: 20,
 					space: 120,
 					values: (_u: uPlotLib, splits: number[]) =>
 						splits.map((v) => (useDate ? formatDate(v) : formatTime(v)))
@@ -229,11 +265,45 @@
 						}
 						u.setSelect({ left: 0, top: 0, width: 0, height: 0 }, false);
 					}
+				],
+				setCursor: [
+					(u: uPlotLib) => {
+						const idx = u.cursor.idx;
+						if (idx == null) {
+							tooltipVisible = false;
+							tooltipIdx = null;
+							return;
+						}
+
+						tooltipIdx = idx;
+						tooltipVisible = true;
+
+						const over = u.over;
+						const left = u.cursor.left ?? 0;
+						const top = u.cursor.top ?? 0;
+						const overRect = over.getBoundingClientRect();
+						const containerRect = containerEl!.getBoundingClientRect();
+
+						const offsetLeft = overRect.left - containerRect.left;
+						const offsetTop = overRect.top - containerRect.top;
+
+						const tooltipWidth = 180;
+						const cursorAbsLeft = offsetLeft + left;
+
+						// Flip tooltip to the left when it would overflow
+						if (cursorAbsLeft + tooltipWidth + 12 > containerRect.width) {
+							tooltipLeft = cursorAbsLeft - tooltipWidth - 8;
+						} else {
+							tooltipLeft = cursorAbsLeft + 12;
+						}
+
+						tooltipTop = offsetTop + top - 10;
+					}
 				]
 			}
 		};
 
-		chart = new UPlot(opts, columnarData, chartEl);
+		chart = new UPlot(opts, columnarData.uplot, chartEl);
 	}
 
 	// ResizeObserver for responsive width
@@ -294,24 +364,42 @@
 			</span>
 		</button>
 		{#if loading}
-			<span class="loading loading-spinner loading-xs text-base-content/40"></span>
+			<span class="loading loading-xs loading-spinner text-base-content/40"></span>
 		{/if}
 	</div>
 
 	{#if !collapsed}
-		<div bind:this={containerEl} class="px-2 pb-2">
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
+			bind:this={containerEl}
+			class="relative px-2 pb-2"
+			onmouseleave={() => {
+				tooltipVisible = false;
+				tooltipIdx = null;
+			}}
+		>
 			<div bind:this={chartEl}></div>
 
-			{#if levels.length > 0}
-				<div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 px-1">
-					{#each levels as level (level)}
-						<div class="flex items-center gap-1">
-							<span
-								class="inline-block h-2.5 w-2.5 rounded-sm"
-								style="background-color: {LEVEL_COLORS[level] ?? FALLBACK_COLOR}"
-							></span>
-							<span class="text-[11px] text-base-content/60">{level}</span>
-						</div>
+			{#if tooltipVisible && tooltipIdx != null && columnarData}
+				<div
+					class="pointer-events-none absolute z-10 rounded border border-base-300 bg-base-100 px-2.5 py-1.5 shadow-lg"
+					style="left: {tooltipLeft}px; top: {tooltipTop}px;"
+				>
+					<div class="mb-1 text-[11px] text-base-content/60">
+						{formatTooltipTimestamp(columnarData.uplot[0][tooltipIdx])}
+					</div>
+					{#each levels as level, i (level)}
+						{@const count = columnarData.rawSeries[i][tooltipIdx]}
+						{#if count > 0}
+							<div class="flex items-center gap-1.5 text-xs">
+								<span
+									class="inline-block h-2 w-2 rounded-sm"
+									style="background-color: {LEVEL_COLORS[level] ?? FALLBACK_COLOR}"
+								></span>
+								<span class="text-base-content/80">{level}</span>
+								<span class="ml-auto font-mono text-base-content">{count}</span>
+							</div>
+						{/if}
 					{/each}
 				</div>
 			{/if}
