@@ -22,9 +22,7 @@
 
 	const tabs = [
 		{ id: 'parameters', label: 'Parameters', icon: 'lucide:list-tree' },
-		{ id: 'json', label: 'JSON', icon: 'lucide:braces' },
-		{ id: 'context', label: 'Context', icon: 'lucide:list' },
-		{ id: 'metrics', label: 'Metrics', icon: 'lucide:bar-chart-3' }
+		{ id: 'json', label: 'JSON', icon: 'lucide:braces' }
 	] as const;
 
 	function flattenObject(
@@ -188,10 +186,6 @@
 							</tbody>
 						</table>
 					{/if}
-				{:else if activeTab === 'context'}
-					<p class="text-base-content/50 text-sm">Coming soon</p>
-				{:else if activeTab === 'metrics'}
-					<p class="text-base-content/50 text-sm">Coming soon</p>
 				{/if}
 			</div>
 		</div>
