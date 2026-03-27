@@ -11,6 +11,9 @@
 	import SearchToolbar from '$lib/components/search/SearchToolbar.svelte';
 	import { CircleX } from 'lucide-svelte';
 	import type { DrawerTab } from '$lib/types';
+	import { replaceState } from '$app/navigation';
+	import { toast } from 'svelte-sonner';
+	import { resolveSharedHit } from '$lib/api/shared-links.remote';
 
 	let { data } = $props();
 
@@ -32,6 +35,32 @@
 
 	$effect(() => {
 		if (browser) localStorage.setItem('logwiz:chartCollapsed', String(chartCollapsed));
+	});
+
+	// Handle shared log link
+	let shareHandled = false;
+	$effect(() => {
+		const code = data.shareCode;
+		if (!code || shareHandled) return;
+		shareHandled = true;
+
+		resolveSharedHit({ code })
+			.then(({ hit }) => {
+				// Clean up URL after router is initialized
+				const url = new URL(window.location.href);
+				url.searchParams.delete('share');
+				replaceState(url, {});
+
+				if (hit) {
+					selectedLog = hit;
+					drawerOpen = true;
+				} else {
+					toast.error('This log entry is no longer available');
+				}
+			})
+			.catch(() => {
+				toast.error('Failed to load shared log');
+			});
 	});
 
 	function handleScroll() {
@@ -172,4 +201,6 @@
 	messageField={store.fieldConfig.messageField}
 	levelField={store.fieldConfig.levelField}
 	timezoneMode={store.timezoneMode}
+	query={data.parsedQuery.query}
+	timeRange={store.absoluteTimeRange}
 />
