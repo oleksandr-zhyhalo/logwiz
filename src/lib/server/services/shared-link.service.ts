@@ -21,20 +21,29 @@ export async function createSharedLink(
 ): Promise<string> {
 	const logFingerprint = fingerprint(hit, timestampField);
 	const logTimestamp = extractTimestampSeconds(hit, timestampField);
-	const code = generateCode();
 
-	await db.insert(sharedLink).values({
-		code,
-		userId,
-		indexName,
-		query,
-		startTime,
-		endTime,
-		logTimestamp,
-		logFingerprint
-	});
-
-	return code;
+	const MAX_RETRIES = 3;
+	for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+		const code = generateCode();
+		try {
+			await db.insert(sharedLink).values({
+				code,
+				userId,
+				indexName,
+				query,
+				startTime,
+				endTime,
+				logTimestamp,
+				logFingerprint
+			});
+			return code;
+		} catch (err: unknown) {
+			const isUniqueViolation =
+				err instanceof Error && err.message.includes('UNIQUE constraint failed');
+			if (!isUniqueViolation || attempt === MAX_RETRIES - 1) throw err;
+		}
+	}
+	throw new Error('Failed to generate unique share code');
 }
 
 export async function resolveSharedLink(code: string) {
@@ -56,11 +65,7 @@ export async function findMatchingHit(
 	let offset = 0;
 
 	for (let page = 0; page < MAX_PAGES; page++) {
-		const q = idx
-			.query('*')
-			.limit(PAGE_SIZE)
-			.offset(offset)
-			.sortBy(timestampField, 'asc');
+		const q = idx.query('*').limit(PAGE_SIZE).offset(offset).sortBy(timestampField, 'asc');
 		q.timeRange(logTimestamp, logTimestamp + 1);
 
 		const result = await idx.search(q);

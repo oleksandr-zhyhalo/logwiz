@@ -125,7 +125,7 @@
 			{/if}
 		{:else if activeTab === 'parameters'}
 			{#if hit}
-				<table class="table table-sm w-full border border-base-300">
+				<table class="table w-full border border-base-300 table-sm">
 					<thead>
 						<tr>
 							<th class="w-1/3 border border-base-300 bg-base-200/50">Key</th>
@@ -135,10 +135,13 @@
 					<tbody>
 						{#each flatParams as [key, value] (key)}
 							<tr class="hover:bg-base-200/50">
-								<td class="border border-base-300 font-['Roboto_Mono',monospace] text-xs font-medium text-base-content/80"
+								<td
+									class="border border-base-300 font-['Roboto_Mono',monospace] text-xs font-medium text-base-content/80"
 									>{key}</td
 								>
-								<td class="border border-base-300 font-['Roboto_Mono',monospace] text-xs [overflow-wrap:break-word]">
+								<td
+									class="border border-base-300 font-['Roboto_Mono',monospace] text-xs [overflow-wrap:break-word]"
+								>
 									{#if value === null || value === undefined}
 										<span class="text-base-content/50 italic">null</span>
 									{:else}

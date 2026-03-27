@@ -8,7 +8,9 @@
 
 	let googleLoading = $state(false);
 	const returnToParam = $derived(page.url.searchParams.get('returnTo'));
-	const returnTo = $derived(returnToParam?.startsWith('/') && !returnToParam.startsWith('//') ? returnToParam : '/');
+	const returnTo = $derived(
+		returnToParam?.startsWith('/') && !returnToParam.startsWith('//') ? returnToParam : '/'
+	);
 
 	async function handleGoogleSignIn() {
 		googleLoading = true;

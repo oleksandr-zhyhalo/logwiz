@@ -6,7 +6,8 @@ export const load: LayoutServerLoad = async (event) => {
 
 	if (!user && !event.url.pathname.startsWith('/auth')) {
 		const returnTo = event.url.pathname + event.url.search;
-		const loginUrl = returnTo === '/' ? '/auth/sign-in' : `/auth/sign-in?returnTo=${encodeURIComponent(returnTo)}`;
+		const loginUrl =
+			returnTo === '/' ? '/auth/sign-in' : `/auth/sign-in?returnTo=${encodeURIComponent(returnTo)}`;
 		redirect(302, loginUrl);
 	}
 
