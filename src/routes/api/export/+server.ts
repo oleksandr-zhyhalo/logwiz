@@ -1,8 +1,10 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
+import type pino from 'pino';
 import { AggregationBuilder } from 'quickwit-js';
 import * as v from 'valibot';
 
 import { exportLogsSchema } from '$lib/schemas/export';
+import { createOperationLogger, logger as baseLogger } from '$lib/server/logger';
 import { getQuickwitClient } from '$lib/server/quickwit';
 import {
 	EXPORT_BATCH_SIZE,
@@ -12,12 +14,14 @@ import {
 import { assertIndexAccess, getFieldConfig } from '$lib/server/services/index.service';
 
 async function runExportJob(
+	exportLogger: pino.Logger,
 	exportId: string,
 	data: v.InferOutput<typeof exportLogsSchema>,
 	timestampField: string,
 	levelField: string,
 	messageField: string
 ): Promise<void> {
+	const start = performance.now();
 	try {
 		const client = getQuickwitClient();
 		const index = client.index(data.indexId);
@@ -53,9 +57,13 @@ async function runExportJob(
 		}
 
 		await exportManager.finalize(exportId, timestampField, levelField, messageField);
+		const durationMs = Math.round(performance.now() - start);
+		exportLogger.info({ exportId, rowCount: totalFetched, durationMs }, 'export completed');
 	} catch (e) {
+		const durationMs = Math.round(performance.now() - start);
 		const message = e instanceof Error ? e.message : 'Unknown export error';
 		exportManager.setError(exportId, message);
+		exportLogger.error({ exportId, durationMs, err: e }, 'export failed');
 	}
 }
 
@@ -77,6 +85,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	const data = parsed.output;
+	const log = locals.logger ?? baseLogger;
 	assertIndexAccess(data.indexId, locals.user.role);
 	const fieldConfig = getFieldConfig(data.indexId);
 
@@ -111,7 +120,16 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		userId: locals.user.id
 	});
 
+	log.info({ exportId, indexId: data.indexId, format: data.format, query: data.query, total }, 'export requested');
+
+	const exportLogger = createOperationLogger(log, {
+		operation: 'export',
+		exportId,
+		indexId: data.indexId
+	});
+
 	runExportJob(
+		exportLogger,
 		exportId,
 		data,
 		fieldConfig.timestampField,

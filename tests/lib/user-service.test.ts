@@ -1,4 +1,6 @@
+import pino from 'pino';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+const testLogger = pino({ level: 'silent' });
 
 const { setRole } = vi.hoisted(() => ({
 	setRole: vi.fn()
@@ -47,7 +49,7 @@ describe('setUserRole', () => {
 	it('rejects changing your own role', async () => {
 		const headers = new Headers();
 
-		await expect(setUserRole(headers, 'admin-1', 'admin-1', 'user')).rejects.toThrow(
+		await expect(setUserRole(testLogger, headers, 'admin-1', 'admin-1', 'user')).rejects.toThrow(
 			'Cannot change your own role'
 		);
 		expect(setRole).not.toHaveBeenCalled();
@@ -56,7 +58,7 @@ describe('setUserRole', () => {
 	it('forwards role changes to Better Auth', async () => {
 		const headers = new Headers({ authorization: 'Bearer token' });
 
-		await setUserRole(headers, 'admin-1', 'user-2', 'admin');
+		await setUserRole(testLogger, headers, 'admin-1', 'user-2', 'admin');
 
 		expect(setRole).toHaveBeenCalledOnce();
 		expect(setRole).toHaveBeenCalledWith({

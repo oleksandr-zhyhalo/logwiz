@@ -2,6 +2,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 
 import { db } from '$lib/server/db';
 import { qwIndex } from '$lib/server/db/schema';
+import { logger } from '$lib/server/logger';
 import { getQuickwitClient } from '$lib/server/quickwit';
 
 type CheckStatus = 'ok' | 'error';
@@ -55,6 +56,10 @@ export function _createHealthHandler(
 ): RequestHandler {
 	return async () => {
 		const health = await runHealthChecks(dependencies);
+
+		if (health.status !== 'ok') {
+			logger.warn({ checks: health.checks }, 'health check failed');
+		}
 
 		return json(health, {
 			status: health.status === 'ok' ? 200 : 503,

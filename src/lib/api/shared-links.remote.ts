@@ -1,12 +1,14 @@
-import { command } from '$app/server';
+import { command, getRequestEvent } from '$app/server';
 import { requireUser } from '$lib/middleware/auth';
 import { createSharedLinkSchema, resolveSharedHitSchema } from '$lib/schemas/shared-link';
+import { logger as baseLogger } from '$lib/server/logger';
 import * as indexService from '$lib/server/services/index.service';
 import * as sharedLinkService from '$lib/server/services/shared-link.service';
 
 export const createSharedLink = command(createSharedLinkSchema, async (data) => {
 	const user = requireUser();
 	indexService.assertIndexAccess(data.indexName, user.role);
+	const log = (getRequestEvent().locals.logger ?? baseLogger).child({ userEmail: user.email });
 	const code = await sharedLinkService.createSharedLink(
 		user.id,
 		data.indexName,
@@ -16,6 +18,7 @@ export const createSharedLink = command(createSharedLinkSchema, async (data) => 
 		data.hit,
 		data.timestampField
 	);
+	log.info({ indexName: data.indexName }, 'shared link created');
 	return { code };
 });
 

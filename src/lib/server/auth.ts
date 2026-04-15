@@ -9,13 +9,15 @@ import { getRequestEvent } from '$app/server';
 import { config } from '$lib/server/config';
 import { db } from '$lib/server/db';
 import { account, inviteToken, user } from '$lib/server/db/schema';
+import { logger } from '$lib/server/logger';
 import * as settingsService from '$lib/server/services/settings.service';
 
 const googleSettings = settingsService.getGoogleAuthSettings();
 
 if (googleSettings) {
-	console.log(
-		`[logwiz] Google auth enabled for domains: ${googleSettings.allowedDomains.join(', ')}`
+	logger.info(
+		{ domains: googleSettings.allowedDomains },
+		'Google auth enabled'
 	);
 }
 
@@ -61,9 +63,7 @@ export const auth = betterAuth({
 
 					const settings = settingsService.getGoogleAuthSettings();
 					if (!settings) {
-						console.warn(
-							'[logwiz] Google sign-in blocked: settings removed but provider still active'
-						);
+						logger.warn({ scope: 'auth' }, 'Google sign-in blocked: settings removed but provider still active');
 						throw new APIError('FORBIDDEN', { message: 'domain_not_allowed' });
 					}
 
@@ -80,7 +80,7 @@ export const auth = betterAuth({
 
 					const domain = userData.email.split('@')[1]?.toLowerCase();
 					if (!domain || !settings.allowedDomains.includes(domain)) {
-						console.warn(`[logwiz] Google sign-in blocked: domain "${domain}" not in allowed list`);
+						logger.warn({ scope: 'auth', domain }, 'Google sign-in blocked: domain not in allowed list');
 						throw new APIError('FORBIDDEN', { message: 'domain_not_allowed' });
 					}
 				},
@@ -88,9 +88,7 @@ export const auth = betterAuth({
 					if (accountData.providerId !== 'google') return;
 
 					try {
-						console.log(
-							`[logwiz] Google account linked for user ${accountData.userId}, cleaning up credential account and invite tokens`
-						);
+						logger.info({ scope: 'auth', userId: accountData.userId }, 'Google account linked, cleaning up credential account and invite tokens');
 
 						db.transaction((tx) => {
 							tx.delete(account)
@@ -106,11 +104,8 @@ export const auth = betterAuth({
 								.where(eq(user.id, accountData.userId))
 								.run();
 						});
-					} catch (e) {
-						console.error(
-							`[logwiz] Failed to clean up credential data for user ${accountData.userId}:`,
-							e
-						);
+					} catch (err) {
+						logger.error({ scope: 'auth', userId: accountData.userId, err }, 'failed to clean up credential data after Google account link');
 					}
 				}
 			}

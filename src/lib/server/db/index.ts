@@ -6,6 +6,7 @@ import { drizzle } from 'drizzle-orm/bun-sqlite';
 import { migrate } from 'drizzle-orm/bun-sqlite/migrator';
 
 import { config } from '$lib/server/config';
+import { logger } from '$lib/server/logger';
 
 import * as schema from './schema';
 
@@ -17,6 +18,6 @@ sqlite.run('PRAGMA foreign_keys = ON');
 
 export const db = drizzle(sqlite, { schema });
 
-console.log('Running database migrations...');
+logger.info('running database migrations');
 migrate(db, { migrationsFolder: './drizzle' });
-console.log('Database migrations complete.');
+logger.info('database migrations complete');

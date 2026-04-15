@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
+vi.mock('$lib/server/logger', () => {
+	const noop = () => {};
+	const noopLogger = { info: noop, warn: noop, error: noop, debug: noop, child: () => noopLogger };
+	return { logger: noopLogger };
+});
+
 vi.mock('$lib/server/db', () => ({ db: {} }));
 vi.mock('$lib/server/quickwit', () => ({ getQuickwitClient: () => ({}) }));
 

@@ -5,6 +5,7 @@ import { auth } from '$lib/server/auth';
 import { config } from '$lib/server/config';
 import { db } from '$lib/server/db';
 import { account, inviteToken, user } from '$lib/server/db/schema';
+import type { Logger } from '$lib/server/logger';
 import { hasGoogleAccount } from '$lib/server/services/auth.service';
 import { randomHex } from '$lib/utils/crypto';
 
@@ -51,6 +52,7 @@ export async function listUsersWithInvites(headers: Headers, requestOrigin: stri
 }
 
 export async function createInvite(
+	logger: Logger,
 	headers: Headers,
 	data: { email: string; name: string; role: 'user' | 'admin' },
 	requestOrigin: string
@@ -84,10 +86,11 @@ export async function createInvite(
 		expiresAt
 	});
 
+	logger.info({ userId: created.user.id, role: data.role }, 'user invite created');
 	return { inviteUrl: buildInviteUrl(publicOrigin, token) };
 }
 
-export async function regenerateInvite(userId: string, requestOrigin: string) {
+export async function regenerateInvite(logger: Logger, userId: string, requestOrigin: string) {
 	if (await hasGoogleAccount(userId)) {
 		throw new Error('Cannot regenerate invite for a Google-authenticated user');
 	}
@@ -103,10 +106,11 @@ export async function regenerateInvite(userId: string, requestOrigin: string) {
 		expiresAt
 	});
 
+	logger.info({ targetUserId: userId }, 'invite regenerated');
 	return { inviteUrl: buildInviteUrl(publicOrigin, token) };
 }
 
-export async function removeUser(headers: Headers, adminId: string, userId: string) {
+export async function removeUser(logger: Logger, headers: Headers, adminId: string, userId: string) {
 	if (userId === adminId) {
 		throw new Error('Cannot remove yourself');
 	}
@@ -114,9 +118,11 @@ export async function removeUser(headers: Headers, adminId: string, userId: stri
 		headers,
 		body: { userId }
 	});
+	logger.info({ targetUserId: userId }, 'user removed');
 }
 
 export async function setUserRole(
+	logger: Logger,
 	headers: Headers,
 	adminId: string,
 	userId: string,
@@ -129,9 +135,11 @@ export async function setUserRole(
 		headers,
 		body: { userId, role }
 	});
+	logger.info({ targetUserId: userId, role }, 'user role changed');
 }
 
 export async function resetPassword(
+	logger: Logger,
 	headers: Headers,
 	adminId: string,
 	userId: string,
@@ -155,4 +163,5 @@ export async function resetPassword(
 		throw e;
 	}
 	await db.update(user).set({ mustChangePassword: true }).where(eq(user.id, userId));
+	logger.info({ targetUserId: userId }, 'user password reset');
 }

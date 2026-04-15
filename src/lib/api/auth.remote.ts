@@ -9,10 +9,12 @@ import {
 	setupPasswordSchema,
 	signInSchema
 } from '$lib/schemas/auth';
+import { logger as baseLogger } from '$lib/server/logger';
 import * as authService from '$lib/server/services/auth.service';
 
 export const signIn = form(signInSchema, async (data, issue) => {
 	const event = getRequestEvent();
+	const log = event.locals.logger ?? baseLogger;
 	const isEmail = data.identifier.includes('@');
 
 	try {
@@ -23,10 +25,12 @@ export const signIn = form(signInSchema, async (data, issue) => {
 		}
 	} catch (e) {
 		if (e instanceof APIError) {
+			log.warn({ authMethod: isEmail ? 'email' : 'username' }, 'sign-in failed: invalid credentials');
 			invalid(issue.identifier(e.message || 'Invalid credentials'));
 		}
 		throw e;
 	}
+	log.info({ authMethod: isEmail ? 'email' : 'username' }, 'sign-in successful');
 	const returnTo = event.url.searchParams.get('returnTo');
 	redirect(303, returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/');
 });
@@ -38,6 +42,7 @@ export const signOut = command(async () => {
 
 export const changePassword = form(changePasswordSchema, async (data) => {
 	const currentUser = requireUser();
+	const log = getRequestEvent().locals.logger ?? baseLogger;
 
 	if (!currentUser.mustChangePassword) {
 		error(403, 'Password change not required');
@@ -52,10 +57,12 @@ export const changePassword = form(changePasswordSchema, async (data) => {
 		throw e;
 	}
 
+	log.info({ userEmail: currentUser.email }, 'forced password change completed');
 	redirect(303, '/');
 });
 
 export const setupPassword = form(setupPasswordSchema, async (data, issue) => {
+	const log = getRequestEvent().locals.logger ?? baseLogger;
 	const result = await authService.setupPassword(data.token, data._password);
 	if (!('success' in result)) {
 		if (result.error === 'google_account') {
@@ -71,12 +78,14 @@ export const setupPassword = form(setupPasswordSchema, async (data, issue) => {
 		);
 		return;
 	}
+	log.info('password setup completed via invite token');
 	redirect(303, '/auth/sign-in');
 });
 
 export const changeOwnPassword = command(changeOwnPasswordSchema, async (data) => {
 	const currentUser = requireUser();
 	const event = getRequestEvent();
+	const log = event.locals.logger ?? baseLogger;
 	try {
 		await authService.changeOwnPassword(
 			currentUser.id,
@@ -98,4 +107,5 @@ export const changeOwnPassword = command(changeOwnPasswordSchema, async (data) =
 		}
 		throw e;
 	}
+	log.info({ userEmail: currentUser.email }, 'user changed own password');
 });

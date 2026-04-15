@@ -1,4 +1,5 @@
 import type { Session } from 'better-auth/minimal';
+import type { Logger } from 'pino';
 
 import type { auth } from '$lib/server/auth';
 
@@ -11,9 +12,14 @@ declare global {
 		interface Locals {
 			user?: Auth['$Infer']['Session']['user'];
 			session?: Session;
+			logger?: Logger;
+			requestId?: string;
 		}
 
-		// interface Error {}
+		interface Error {
+			message: string;
+			requestId?: string;
+		}
 		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}

@@ -1,17 +1,21 @@
-import { command } from '$app/server';
+import { command, getRequestEvent } from '$app/server';
 import { requireAdmin } from '$lib/middleware/auth';
 import { saveGoogleAuthSettingsSchema } from '$lib/schemas/settings';
+import { logger as baseLogger } from '$lib/server/logger';
 import * as settingsService from '$lib/server/services/settings.service';
 
 export const removeGoogleAuthSettings = command(async () => {
-	requireAdmin();
+	const admin = requireAdmin();
+	const log = (getRequestEvent().locals.logger ?? baseLogger).child({ userEmail: admin.email });
 	settingsService.deleteSetting('google_client_id');
 	settingsService.deleteSetting('google_client_secret');
 	settingsService.deleteSetting('google_allowed_domains');
+	log.info('Google auth settings removed');
 });
 
 export const saveGoogleAuthSettings = command(saveGoogleAuthSettingsSchema, async (data) => {
-	requireAdmin();
+	const admin = requireAdmin();
+	const log = (getRequestEvent().locals.logger ?? baseLogger).child({ userEmail: admin.email });
 
 	settingsService.setSetting('google_client_id', data.clientId);
 
@@ -21,4 +25,5 @@ export const saveGoogleAuthSettings = command(saveGoogleAuthSettingsSchema, asyn
 	}
 
 	settingsService.setSetting('google_allowed_domains', JSON.stringify(data.allowedDomains));
+	log.info({ domainCount: data.allowedDomains.length }, 'Google auth settings saved');
 });

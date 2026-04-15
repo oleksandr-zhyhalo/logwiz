@@ -21,6 +21,11 @@ async function importConfig() {
 	return mod;
 }
 
+async function importLogger() {
+	const mod = await import('../../src/lib/server/logger');
+	return mod.logger;
+}
+
 const TEST_DATA_DIR = './data/test-config';
 const TEST_DB_PATH = `${TEST_DATA_DIR}/logwiz.db`;
 
@@ -46,7 +51,8 @@ describe('config', () => {
 				LOGWIZ_QUICKWIT_URL: 'http://localhost:7280',
 				LOGWIZ_DATABASE_PATH: TEST_DB_PATH
 			};
-			const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+			const logger = await importLogger();
+			const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
 			const { buildConfig } = await importConfig();
 			const cfg = buildConfig();
 			expect(cfg.origin).toBeUndefined();
@@ -59,13 +65,17 @@ describe('config', () => {
 				ORIGIN: 'http://localhost:5173',
 				LOGWIZ_DATABASE_PATH: TEST_DB_PATH
 			};
-			const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 			const { buildConfig } = await importConfig();
+			const logger = await importLogger();
+			const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
 			const cfg = buildConfig();
 			expect(cfg.secret).toBeTruthy();
 			expect(cfg.secret.length).toBe(64); // 32 bytes hex
 			expect(existsSync(resolve(TEST_DATA_DIR, '.secret'))).toBe(true);
-			expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Generated auth secret'));
+			expect(warnSpy).toHaveBeenCalledWith(
+				expect.objectContaining({ secretPath: expect.stringContaining('.secret') }),
+				'generated auth secret'
+			);
 			warnSpy.mockRestore();
 		});
 
@@ -75,7 +85,8 @@ describe('config', () => {
 				ORIGIN: 'http://localhost:5173',
 				LOGWIZ_DATABASE_PATH: TEST_DB_PATH
 			};
-			const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+			const logger = await importLogger();
+			const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
 			const { buildConfig: buildFirst } = await importConfig();
 			const first = buildFirst();
 
@@ -92,7 +103,8 @@ describe('config', () => {
 				ORIGIN: 'http://localhost:5173',
 				LOGWIZ_DATABASE_PATH: TEST_DB_PATH
 			};
-			const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+			const logger = await importLogger();
+			const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
 			const { buildConfig } = await importConfig();
 			const cfg = buildConfig();
 			expect(cfg.quickwitUrl).toBe('http://localhost:7280');
@@ -122,7 +134,8 @@ describe('config', () => {
 				LOGWIZ_RATE_LIMIT_MAX: '200',
 				LOGWIZ_SIGNIN_RATE_LIMIT_MAX: '3'
 			};
-			const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+			const logger = await importLogger();
+			const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
 			const { buildConfig } = await importConfig();
 			const cfg = buildConfig();
 			expect(cfg.databasePath).toBe(TEST_DB_PATH);
@@ -142,10 +155,8 @@ describe('config', () => {
 				LOGWIZ_ORIGIN: 'http://old:5173',
 				LOGWIZ_DATABASE_PATH: TEST_DB_PATH
 			};
-			const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 			const { buildConfig } = await importConfig();
 			expect(() => buildConfig()).toThrow('LOGWIZ_QUICKWIT_URL');
-			warnSpy.mockRestore();
 		});
 
 		it('does not use LOGWIZ_ORIGIN when ORIGIN is missing', async () => {
@@ -154,7 +165,8 @@ describe('config', () => {
 				LOGWIZ_ORIGIN: 'http://old:5173',
 				LOGWIZ_DATABASE_PATH: TEST_DB_PATH
 			};
-			const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+			const logger = await importLogger();
+			const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
 			const { buildConfig } = await importConfig();
 			const cfg = buildConfig();
 			expect(cfg.origin).toBeUndefined();
@@ -167,7 +179,8 @@ describe('config', () => {
 				ORIGIN: 'http://localhost:5173',
 				LOGWIZ_DATABASE_PATH: TEST_DB_PATH
 			};
-			const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+			const logger = await importLogger();
+			const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
 			const { buildConfig } = await importConfig();
 			const cfg = buildConfig();
 			expect(() => {
@@ -183,7 +196,8 @@ describe('config', () => {
 				LOGWIZ_DATABASE_PATH: TEST_DB_PATH,
 				LOGWIZ_INVITE_EXPIRY_HOURS: 'notanumber'
 			};
-			const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+			const logger = await importLogger();
+			const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
 			const { buildConfig } = await importConfig();
 			const cfg = buildConfig();
 			expect(cfg.inviteExpiryHours).toBe(48);

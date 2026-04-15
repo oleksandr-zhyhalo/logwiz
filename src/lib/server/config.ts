@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
 import { env } from '$env/dynamic/private';
+import { logger } from '$lib/server/logger';
 import { randomHex } from '$lib/utils/crypto';
 
 interface Config {
@@ -37,7 +38,7 @@ function resolveSecret(dataDir: string): string {
 	const envSecret = readEnv('LOGWIZ_AUTH_SECRET');
 	if (envSecret) {
 		if (envSecret.length >= 32) return envSecret;
-		console.warn('[logwiz] LOGWIZ_AUTH_SECRET is set but shorter than 32 characters, ignoring');
+		logger.warn('LOGWIZ_AUTH_SECRET is set but shorter than 32 characters, ignoring');
 	}
 
 	const secretPath = resolve(dataDir, '.secret');
@@ -48,7 +49,7 @@ function resolveSecret(dataDir: string): string {
 	const generated = randomHex(32);
 	mkdirSync(dataDir, { recursive: true });
 	writeFileSync(secretPath, generated, { mode: 0o600 });
-	console.warn(`[logwiz] Generated auth secret at ${secretPath}`);
+	logger.warn({ secretPath }, 'generated auth secret');
 	return generated;
 }
 
@@ -101,9 +102,9 @@ export function buildConfig(): Config {
 		optionalDefaults.push(['LOGWIZ_AUTH_SECRET', '(file-generated)']);
 
 	if (optionalDefaults.length > 0) {
-		console.warn(
-			`[logwiz] Using defaults for:\n` +
-				optionalDefaults.map(([k, v]) => `  - ${k} = ${v}`).join('\n')
+		logger.warn(
+			{ defaults: Object.fromEntries(optionalDefaults) },
+			'using default values for unset environment variables'
 		);
 	}
 

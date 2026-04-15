@@ -1,6 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 
 import { config } from '$lib/server/config';
+import { logger } from '$lib/server/logger';
 import { verifyIngestToken } from '$lib/server/services/ingest-token.service';
 
 const MAX_BODY_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -52,11 +53,13 @@ export function _createIngestHandler(
 		const search = new URL(request.url).search;
 		const token = extractBearerToken(request.headers.get('authorization'));
 		if (!token) {
+			logger.warn({ indexId }, 'ingest rejected: missing bearer token');
 			return json({ message: 'Missing bearer token' }, { status: 401 });
 		}
 
 		const verifiedToken = dependencies.verifyToken(token, indexId);
 		if (!verifiedToken) {
+			logger.warn({ indexId }, 'ingest rejected: invalid token');
 			return json({ message: 'Invalid ingest token' }, { status: 403 });
 		}
 
@@ -64,16 +67,19 @@ export function _createIngestHandler(
 		if (contentLength) {
 			const parsedLength = Number.parseInt(contentLength, 10);
 			if (Number.isFinite(parsedLength) && parsedLength > MAX_BODY_BYTES) {
+				logger.warn({ indexId, contentLength: parsedLength }, 'ingest rejected: body too large');
 				return json({ message: 'Request body too large' }, { status: 413 });
 			}
 		}
 
 		const body = await request.arrayBuffer();
 		if (body.byteLength > MAX_BODY_BYTES) {
+			logger.warn({ indexId, bodySize: body.byteLength }, 'ingest rejected: body too large');
 			return json({ message: 'Request body too large' }, { status: 413 });
 		}
 
 		if (body.byteLength === 0) {
+			logger.warn({ indexId }, 'ingest rejected: empty body');
 			return json({ message: 'Request body is required' }, { status: 400 });
 		}
 
@@ -84,6 +90,7 @@ export function _createIngestHandler(
 				body,
 				request.headers.get('content-type')
 			);
+			logger.debug({ indexId, upstreamStatus: upstream.status }, 'ingest forwarded');
 			const responseBody = await upstream.text();
 			const headers = new Headers();
 			const contentType = upstream.headers.get('content-type');
@@ -95,7 +102,8 @@ export function _createIngestHandler(
 				status: upstream.status,
 				headers
 			});
-		} catch {
+		} catch (err) {
+			logger.error({ indexId, err }, 'ingest upstream forwarding failed');
 			return json({ message: 'Failed to forward ingest request' }, { status: 502 });
 		}
 	};

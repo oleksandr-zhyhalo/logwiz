@@ -1,4 +1,4 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 import { and, eq } from 'drizzle-orm';
@@ -9,6 +9,7 @@ import { auth } from '$lib/server/auth';
 import { config, validateConfig } from '$lib/server/config';
 import { db } from '$lib/server/db';
 import { account, user } from '$lib/server/db/schema';
+import { createRequestLogger, logger, resolveRequestId } from '$lib/server/logger';
 import { syncIndexesFromQuickwit } from '$lib/server/services/index.service';
 
 async function seedDefaultAdmin() {
@@ -32,21 +33,80 @@ async function seedDefaultAdmin() {
 		}
 	});
 
-	console.log(`[logwiz] Default admin created: ${config.adminUsername} / ${config.adminEmail}`);
+	logger.info({ username: config.adminUsername, email: config.adminEmail }, 'default admin created');
 }
 
 if (!building) {
 	validateConfig();
 
-	await seedDefaultAdmin().catch(console.error);
+	await seedDefaultAdmin().catch((err) => logger.error({ err }, 'failed to seed default admin'));
 
 	try {
 		const summaries = await syncIndexesFromQuickwit();
-		console.log(`[logwiz] Synced ${summaries.length} indexes from Quickwit`);
-	} catch (e) {
-		console.warn('[logwiz] Failed to sync indexes from Quickwit:', e);
+		logger.info({ count: summaries.length }, 'synced indexes from Quickwit');
+	} catch (err) {
+		logger.warn({ err }, 'failed to sync indexes from Quickwit');
 	}
 }
+
+const SKIP_PATHS = ['/_app/', '/favicon'];
+const STATIC_EXT = /\.\w{2,5}$/;
+
+function shouldSkipLog(path: string, status: number): boolean {
+	if (status >= 400) return false; // always log errors
+	if (path === '/api/health') return true;
+	if (STATIC_EXT.test(path)) return true;
+	return SKIP_PATHS.some((prefix) => path.startsWith(prefix));
+}
+
+function resolveLogLevel(
+	method: string,
+	path: string,
+	status: number,
+	durationMs: number
+): 'debug' | 'info' | 'warn' | 'error' {
+	if (status >= 500) return 'error';
+	if (status === 429) return 'warn';
+	if (durationMs > 10_000) return 'warn';
+	if (path === '/api/health' && status !== 200) return 'warn';
+	if (path.startsWith('/api/') || path.startsWith('/auth/') || method !== 'GET') return 'info';
+	return 'debug';
+}
+
+const handleLogging: Handle = async ({ event, resolve }) => {
+	const requestId = resolveRequestId(event.request.headers);
+	const method = event.request.method;
+	const path = event.url.pathname;
+
+	const reqLogger = createRequestLogger({ requestId, method, path });
+	event.locals.logger = reqLogger;
+	event.locals.requestId = requestId;
+
+	reqLogger.debug('request start');
+
+	const start = performance.now();
+	let response: Response;
+	try {
+		response = await resolve(event);
+	} catch (err) {
+		const durationMs = Math.round(performance.now() - start);
+		const userEmail = event.locals.user?.email;
+		reqLogger.error({ err, durationMs, userEmail }, 'request error');
+		throw err;
+	}
+
+	const durationMs = Math.round(performance.now() - start);
+	const status = response.status;
+
+	if (!shouldSkipLog(path, status)) {
+		const userEmail = event.locals.user?.email;
+		const level = resolveLogLevel(method, path, status, durationMs);
+		reqLogger[level]({ status, durationMs, userEmail }, 'request complete');
+	}
+
+	response.headers.set('x-request-id', requestId);
+	return response;
+};
 
 const authLimiter = new RetryAfterRateLimiter({
 	IP: [config.signinRateLimitMax, 'm']
@@ -142,4 +202,12 @@ const handleSecurityHeaders: Handle = async ({ event, resolve }) => {
 	return response;
 };
 
-export const handle = sequence(handleSecurityHeaders, handleRateLimit, handleBetterAuth);
+export const handle = sequence(handleSecurityHeaders, handleLogging, handleRateLimit, handleBetterAuth);
+
+export const handleError: HandleServerError = ({ event }) => {
+	const requestId = event.locals.requestId;
+	return {
+		message: 'An unexpected error occurred',
+		requestId
+	};
+};
