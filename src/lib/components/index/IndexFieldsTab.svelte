@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Search } from 'lucide-svelte';
+
 	import type { AdminIndexField } from '$lib/types';
 
 	let { fields }: { fields: AdminIndexField[] } = $props();
@@ -20,17 +22,19 @@
 </script>
 
 <div class="flex flex-col gap-3">
-	<div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-		<div>
-			<h3 class="text-base font-semibold">Fields</h3>
-			<p class="text-xs text-base-content/50">{countLabel}</p>
-		</div>
-		<input
-			class="input-bordered input input-sm w-full md:max-w-xs"
-			placeholder="Filter fields..."
-			aria-label="Filter fields"
-			bind:value={filter}
-		/>
+	<div class="flex flex-wrap items-center gap-3">
+		<label class="input-bordered input input-sm flex flex-1 items-center gap-2">
+			<Search size={14} class="opacity-60" />
+			<input
+				type="search"
+				class="grow"
+				placeholder="Filter fields…"
+				aria-label="Filter fields"
+				bind:value={filter}
+			/>
+		</label>
+
+		<span class="text-sm text-base-content/60">{countLabel}</span>
 	</div>
 
 	<div class="overflow-x-auto rounded-box border border-base-300">
