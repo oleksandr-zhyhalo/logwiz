@@ -40,7 +40,7 @@
 			<input
 				type="search"
 				class="grow"
-				placeholder="Search by ID…"
+				placeholder="Search sources…"
 				aria-label="Search sources"
 				bind:value={filter}
 			/>

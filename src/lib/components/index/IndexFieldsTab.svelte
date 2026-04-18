@@ -30,8 +30,8 @@
 			<input
 				type="search"
 				class="grow"
-				placeholder="Filter fields…"
-				aria-label="Filter fields"
+				placeholder="Search fields…"
+				aria-label="Search fields"
 				bind:value={filter}
 			/>
 		</label>

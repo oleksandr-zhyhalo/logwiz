@@ -35,12 +35,12 @@
 			role="tab"
 			aria-current={isActive ? 'page' : undefined}
 			aria-selected={isActive}
-			class="flex items-center gap-2 border-b-2 px-3 py-2 text-sm transition-colors"
-			class:border-base-content={isActive}
-			class:font-medium={isActive}
-			class:border-transparent={!isActive}
-			class:text-base-content={isActive}
-			class:text-base-content_60={!isActive}
+			class={[
+				'flex items-center gap-2 border-b-2 px-3 py-2 text-sm transition-colors',
+				isActive
+					? 'border-base-content font-medium text-base-content'
+					: 'border-transparent text-base-content/60 hover:text-base-content'
+			]}
 		>
 			<span>{tab.label}</span>
 			{#if tab.count !== null}
@@ -49,12 +49,3 @@
 		</a>
 	{/each}
 </div>
-
-<style>
-	.text-base-content_60 {
-		color: color-mix(in srgb, var(--color-base-content) 60%, transparent);
-	}
-	.text-base-content_60:hover {
-		color: var(--color-base-content);
-	}
-</style>

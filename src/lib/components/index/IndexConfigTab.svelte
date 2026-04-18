@@ -5,42 +5,43 @@
 	import { saveIndexConfig } from '$lib/api/indexes.remote';
 	import type { AdminIndexDetail } from '$lib/types';
 
+	type Visibility = 'hidden' | 'admin' | 'all';
+
 	let { detail }: { detail: AdminIndexDetail } = $props();
 
 	const configForm = $derived(saveIndexConfig.for(detail.indexId));
 
-	// Full form reset when switching indexes
+	let visibility = $state<Visibility>((detail.visibility as Visibility) ?? 'all');
+	let contextFieldTags = $state<string[]>(
+		Array.isArray(detail.contextFields) ? (detail.contextFields as string[]) : []
+	);
+	let contextFieldInput = $state('');
+
+	const contextFieldsSerialized = $derived(JSON.stringify(contextFieldTags));
+	const adminVisible = $derived(visibility !== 'hidden');
+	const memberVisible = $derived(visibility === 'all');
+
+	// Reset form state when switching indexes.
 	$effect(() => {
 		const id = detail.indexId;
 		untrack(() => {
+			const nextVisibility = (detail.visibility as Visibility) ?? 'all';
+			const nextTags = Array.isArray(detail.contextFields)
+				? (detail.contextFields as string[])
+				: [];
 			configForm.fields.set({
 				indexId: id,
 				displayName: detail.displayName ?? '',
 				levelField: detail.levelField ?? 'level',
 				messageField: detail.messageField ?? 'message',
 				tracebackField: detail.tracebackField ?? '',
-				visibility: (detail.visibility as 'hidden' | 'admin' | 'all') ?? 'all',
-				contextFields: contextFieldsSerialized
+				visibility: nextVisibility,
+				contextFields: JSON.stringify(nextTags)
 			});
-			contextFieldTags = Array.isArray(detail.contextFields)
-				? (detail.contextFields as string[])
-				: [];
+			visibility = nextVisibility;
+			contextFieldTags = nextTags;
 		});
 	});
-
-	// Sync only contextFields when tags change (without resetting other fields)
-	$effect(() => {
-		const serialized = contextFieldsSerialized;
-		untrack(() => {
-			configForm.fields.contextFields.set(serialized);
-		});
-	});
-
-	let contextFieldTags = $state<string[]>(
-		Array.isArray(detail.contextFields) ? (detail.contextFields as string[]) : []
-	);
-	let contextFieldInput = $state('');
-	const contextFieldsSerialized = $derived(JSON.stringify(contextFieldTags));
 
 	function addContextField() {
 		const value = contextFieldInput.trim();
@@ -61,21 +62,13 @@
 		}
 	}
 
-	let visibility = $state<'hidden' | 'admin' | 'all'>(
-		(detail.visibility as 'hidden' | 'admin' | 'all') ?? 'all'
-	);
-	let adminVisible = $derived(visibility !== 'hidden');
-	let memberVisible = $derived(visibility === 'all');
+	function setAdminVisible(checked: boolean) {
+		visibility = checked ? (memberVisible ? 'all' : 'admin') : 'hidden';
+	}
 
-	function setVisibility(admin: boolean, member: boolean) {
-		if (member) {
-			visibility = 'all';
-		} else if (admin) {
-			visibility = 'admin';
-		} else {
-			visibility = 'hidden';
-		}
-		configForm.fields.visibility.set(visibility);
+	function setMemberVisible(checked: boolean) {
+		if (checked) visibility = 'all';
+		else if (visibility === 'all') visibility = 'admin';
 	}
 </script>
 
@@ -129,11 +122,7 @@
 							type="checkbox"
 							class="checkbox checkbox-xs"
 							checked={adminVisible}
-							onchange={(e) => {
-								const checked = e.currentTarget.checked;
-								if (!checked) setVisibility(false, false);
-								else setVisibility(true, memberVisible);
-							}}
+							onchange={(e) => setAdminVisible(e.currentTarget.checked)}
 						/>
 						Admin
 					</label>
@@ -142,11 +131,7 @@
 							type="checkbox"
 							class="checkbox checkbox-xs"
 							checked={memberVisible}
-							onchange={(e) => {
-								const checked = e.currentTarget.checked;
-								if (checked) setVisibility(true, true);
-								else setVisibility(adminVisible, false);
-							}}
+							onchange={(e) => setMemberVisible(e.currentTarget.checked)}
 						/>
 						Member
 					</label>
