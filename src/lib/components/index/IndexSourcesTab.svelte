@@ -32,10 +32,7 @@
 </script>
 
 <section>
-	<header class="mb-3">
-		<h2 class="text-xl font-semibold">Sources</h2>
-		<p class="mt-1 text-sm text-base-content/60">Data sources ingesting into this index</p>
-	</header>
+	<p class="mb-3 text-sm text-base-content/60">Data sources ingesting into this index</p>
 
 	<div class="mb-3 flex flex-wrap items-center gap-3">
 		<label class="input-bordered input input-sm flex flex-1 items-center gap-2">

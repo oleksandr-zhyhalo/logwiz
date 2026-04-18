@@ -22,6 +22,8 @@
 </script>
 
 <div class="flex flex-col gap-3">
+	<p class="text-sm text-base-content/60">Fields defined in this index's schema.</p>
+
 	<div class="flex flex-wrap items-center gap-3">
 		<label class="input-bordered input input-sm flex flex-1 items-center gap-2">
 			<Search size={14} class="opacity-60" />
