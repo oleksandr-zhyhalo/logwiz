@@ -88,3 +88,13 @@ export function verifyIngestToken(
 
 	return { id: record.id, name: record.name, indexId: record.indexId };
 }
+
+export function hasIngestTokenForIndex(indexId: string): { count: number } {
+	const [row] = db
+		.select({ id: ingestToken.id })
+		.from(ingestToken)
+		.where(eq(ingestToken.indexId, indexId))
+		.limit(1)
+		.all();
+	return { count: row ? 1 : 0 };
+}
