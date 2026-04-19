@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 
 import type { CreateIngestTokenInput } from '$lib/schemas/ingest-tokens';
 import { db } from '$lib/server/db';
@@ -95,12 +95,13 @@ export function verifyIngestToken(
 	return { id: record.id, name: record.name, indexId: record.indexId };
 }
 
-export function hasIngestTokenForIndex(indexId: string): { count: number } {
+export function getLatestIngestTokenForIndex(indexId: string): string | null {
 	const [row] = db
-		.select({ id: ingestToken.id })
+		.select({ token: ingestToken.token })
 		.from(ingestToken)
 		.where(eq(ingestToken.indexId, indexId))
+		.orderBy(desc(ingestToken.createdAt))
 		.limit(1)
 		.all();
-	return { count: row ? 1 : 0 };
+	return row?.token ?? null;
 }

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import type { IconifyIcon } from '@iconify/types';
 
 	let {
 		label,
@@ -7,7 +8,7 @@
 		href
 	}: {
 		label: string;
-		icon: string;
+		icon: IconifyIcon;
 		href: string;
 	} = $props();
 </script>

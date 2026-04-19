@@ -20,15 +20,15 @@
 
 	const noIndexes = $derived(indexIds.length === 0);
 
-	function resetForm() {
-		tokenName = '';
-		selectedIndexId = '';
-		creating = false;
-	}
-
-	function handleClose() {
-		resetForm();
-	}
+	let wasOpen = false;
+	$effect(() => {
+		if (open && !wasOpen) {
+			tokenName = '';
+			selectedIndexId = indexIds.length === 1 ? indexIds[0] : '';
+			creating = false;
+		}
+		wasOpen = open;
+	});
 
 	function handleCancel() {
 		open = false;
@@ -57,7 +57,7 @@
 	}
 </script>
 
-<Modal bind:open title="Create Ingest Token" onclose={handleClose}>
+<Modal bind:open title="Create Ingest Token">
 	<form
 		class="mt-4 flex flex-col gap-4"
 		onsubmit={(e) => {

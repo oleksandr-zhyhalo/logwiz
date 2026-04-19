@@ -1,14 +1,21 @@
 <script lang="ts">
+	import nodejsIcon from '@iconify-icons/logos/nodejs-icon';
+	import pythonIcon from '@iconify-icons/logos/python';
+	import webIcon from '@iconify-icons/mdi/web';
+
 	import SendLogsSourceCard from '$lib/components/admin/SendLogsSourceCard.svelte';
 
 	const sections = [
 		{
 			label: 'Languages',
-			sources: [{ label: 'Python', icon: 'logos:python', href: '/administration/send-logs/python' }]
+			sources: [
+				{ label: 'Python', icon: pythonIcon, href: '/administration/send-logs/python' },
+				{ label: 'Node.js', icon: nodejsIcon, href: '/administration/send-logs/javascript' }
+			]
 		},
 		{
 			label: 'Other',
-			sources: [{ label: 'HTTP', icon: 'mdi:web', href: '/administration/send-logs/http' }]
+			sources: [{ label: 'HTTP', icon: webIcon, href: '/administration/send-logs/http' }]
 		}
 	];
 </script>
