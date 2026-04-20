@@ -25,7 +25,13 @@
 						a direct path from your app to our endpoint.
 					</p>
 				</div>
-				<CodeBlock {...data.snippets.install} copyTitle="Copy install command" />
+				<p class="text-sm text-base-content/70">
+					If you're starting from scratch, initialize a module first. Skip this if your project
+					already has a <InlineCode>go.mod</InlineCode>.
+				</p>
+				<CodeBlock {...data.snippets.init} copyTitle="Copy init command" />
+				<p class="text-sm text-base-content/70">Then add the OpenTelemetry packages:</p>
+				<CodeBlock {...data.snippets.get} copyTitle="Copy get command" />
 				<Callout variant="info">
 					<p>
 						Go 1.21+ required. The OTel Go logs API is still in beta — pin SDK versions in

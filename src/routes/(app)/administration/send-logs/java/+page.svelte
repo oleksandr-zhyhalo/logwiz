@@ -74,8 +74,8 @@
 				{:else}
 					<Callout variant="info">
 						<p>
-							Java 17+ recommended. The <InlineCode>-api-incubator</InlineCode> artifact is required
-							for the log bridge at the time of writing.
+							Java 17+ recommended. The logs API is stable in
+							<InlineCode>opentelemetry-api</InlineCode> since 1.27.
 						</p>
 					</Callout>
 				{/if}

@@ -3,8 +3,9 @@ import { highlightCode } from '$lib/server/syntax';
 
 import type { PageServerLoad } from './$types';
 
-const INSTALL_COMMAND = `go mod init example.com/logwiz-demo
-go get go.opentelemetry.io/otel \\
+const INIT_COMMAND = 'go mod init example.com/logwiz-demo';
+
+const GET_COMMAND = `go get go.opentelemetry.io/otel \\
     go.opentelemetry.io/otel/log \\
     go.opentelemetry.io/otel/sdk/log \\
     go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp \\
@@ -37,9 +38,15 @@ func main() {
 	logger.Info("Hello from Go to Logwiz")
 }`;
 
-const INSTALL_SNIPPET = {
-	code: INSTALL_COMMAND,
-	html: await highlightCode(INSTALL_COMMAND, 'bash'),
+const INIT_SNIPPET = {
+	code: INIT_COMMAND,
+	html: await highlightCode(INIT_COMMAND, 'bash'),
+	lang: 'bash'
+};
+
+const GET_SNIPPET = {
+	code: GET_COMMAND,
+	html: await highlightCode(GET_COMMAND, 'bash'),
 	lang: 'bash'
 };
 
@@ -59,7 +66,8 @@ export OTEL_EXPORTER_OTLP_LOGS_HEADERS=Authorization=Bearer%20${token}`;
 
 	return {
 		snippets: {
-			install: INSTALL_SNIPPET,
+			init: INIT_SNIPPET,
+			get: GET_SNIPPET,
 			envVars: {
 				code: envVars,
 				html: await highlightCode(envVars, 'bash'),
