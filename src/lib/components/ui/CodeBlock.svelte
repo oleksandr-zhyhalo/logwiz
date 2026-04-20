@@ -19,7 +19,9 @@
 </script>
 
 <div class="overflow-hidden rounded-lg border border-base-300">
-	<div class="flex items-center justify-between gap-3 border-b border-base-300 bg-base-200 px-3 py-1.5">
+	<div
+		class="flex items-center justify-between gap-3 border-b border-base-300 bg-base-200 px-3 py-1.5"
+	>
 		<div class="flex items-center gap-2 text-sm text-base-content/70">
 			<CodeXml size={14} class="shrink-0" />
 			<span>{langLabel}</span>

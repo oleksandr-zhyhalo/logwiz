@@ -41,11 +41,7 @@ export function createIngestToken(
 		})
 		.run();
 
-	const [created] = db
-		.select()
-		.from(ingestToken)
-		.where(eq(ingestToken.token, token))
-		.all();
+	const [created] = db.select().from(ingestToken).where(eq(ingestToken.token, token)).all();
 	if (!created) {
 		throw new Error('Failed to create ingest token');
 	}

@@ -66,8 +66,8 @@
 				<div>
 					<h3 class="font-semibold">Verify in Logwiz</h3>
 					<p class="mt-1 text-sm text-base-content/60">
-						Run your script, then open Search and filter on <InlineCode>service_name</InlineCode> to
-						see your log arrive (typically within 2 seconds).
+						Run your script, then open Search and filter on <InlineCode>service_name</InlineCode> to see
+						your log arrive (typically within 2 seconds).
 					</p>
 				</div>
 				<div>

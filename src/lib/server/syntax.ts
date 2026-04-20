@@ -1,4 +1,4 @@
-import { codeToHtml, type BundledLanguage } from 'shiki';
+import { type BundledLanguage, codeToHtml } from 'shiki';
 
 export const HIGHLIGHT_THEME = 'github-light';
 

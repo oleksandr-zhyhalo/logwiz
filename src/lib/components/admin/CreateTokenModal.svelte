@@ -79,7 +79,7 @@
 		<label class="floating-label">
 			<span>Index</span>
 			<select
-				class="select select-md w-full"
+				class="select w-full select-md"
 				bind:value={selectedIndexId}
 				disabled={noIndexes}
 				required

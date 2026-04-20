@@ -27,8 +27,8 @@
 	{#if !data.selectedIndexId}
 		<Callout variant="warning">
 			<p>
-				No indexes are available to you. Create an index first, then come back to generate an
-				ingest token and snippet.
+				No indexes are available to you. Create an index first, then come back to generate an ingest
+				token and snippet.
 			</p>
 		</Callout>
 	{:else}
@@ -46,7 +46,7 @@
 						<span>Index</span>
 						<select
 							name="index"
-							class="select select-md w-full"
+							class="select w-full select-md"
 							value={data.selectedIndexId}
 							onchange={onIndexChange}
 						>
@@ -60,7 +60,9 @@
 
 			{#if !data.token || !data.snippets || !data.endpointUrl}
 				<SendLogsStep number={2} isLast>
-					<div class="flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm">
+					<div
+						class="flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm"
+					>
 						<AlertTriangle size={18} class="mt-0.5 shrink-0 text-warning" />
 						<div class="flex-1">
 							<p>
@@ -69,7 +71,7 @@
 							</p>
 							<button
 								type="button"
-								class="mt-2 btn btn-sm btn-neutral"
+								class="btn mt-2 btn-sm btn-neutral"
 								onclick={() => (createTokenOpen = true)}
 							>
 								Create a token →
@@ -84,8 +86,8 @@
 					<div>
 						<h3 class="font-semibold">Endpoint</h3>
 						<p class="mt-1 text-sm text-base-content/60">
-							Pre-built for <InlineCode>{data.selectedIndexId}</InlineCode> with your most recent
-							token embedded in the snippet below.
+							Pre-built for <InlineCode>{data.selectedIndexId}</InlineCode> with your most recent token
+							embedded in the snippet below.
 						</p>
 					</div>
 					<div class="flex items-center gap-2">
@@ -102,9 +104,9 @@
 					</div>
 					<Callout variant="info">
 						<p>
-							<InlineCode>?commit=wait_for</InlineCode> makes Quickwit index the documents before
-							returning, so records are immediately searchable. Drop it to use the default async
-							commit — higher throughput, longer visibility lag.
+							<InlineCode>?commit=wait_for</InlineCode> makes Quickwit index the documents before returning,
+							so records are immediately searchable. Drop it to use the default async commit — higher
+							throughput, longer visibility lag.
 						</p>
 					</Callout>
 				</SendLogsStep>
@@ -125,8 +127,8 @@
 					<div>
 						<h3 class="font-semibold">Verify in Logwiz</h3>
 						<p class="mt-1 text-sm text-base-content/60">
-							Open Search, pick <InlineCode>{data.selectedIndexId}</InlineCode> from the index
-							selector, and look for the records you just sent.
+							Open Search, pick <InlineCode>{data.selectedIndexId}</InlineCode> from the index selector,
+							and look for the records you just sent.
 						</p>
 					</div>
 					<div>

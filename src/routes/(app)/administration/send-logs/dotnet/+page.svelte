@@ -69,7 +69,10 @@
 				<CodeBlock {...activeFlavor.install} copyTitle="Copy install command" />
 				{#if flavor === 'auto'}
 					<Callout variant="info">
-						<p>.NET 6+ supported. The Linux/macOS script is shown; the PowerShell equivalent is in comments.</p>
+						<p>
+							.NET 6+ supported. The Linux/macOS script is shown; the PowerShell equivalent is in
+							comments.
+						</p>
 					</Callout>
 				{:else}
 					<Callout variant="info">

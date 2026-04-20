@@ -21,8 +21,8 @@
 				<div>
 					<h3 class="font-semibold">Install the OpenTelemetry SDK</h3>
 					<p class="mt-1 text-sm text-base-content/60">
-						Logwiz accepts OTLP over HTTP (proto-http). The exporter and the slog bridge give you
-						a direct path from your app to our endpoint.
+						Logwiz accepts OTLP over HTTP (proto-http). The exporter and the slog bridge give you a
+						direct path from your app to our endpoint.
 					</p>
 				</div>
 				<p class="text-sm text-base-content/70">
@@ -44,8 +44,8 @@
 				<div>
 					<h3 class="font-semibold">Set environment variables</h3>
 					<p class="mt-1 text-sm text-base-content/60">
-						The exporter reads these automatically. Set them once in your deployment environment — no
-						code changes needed per service.
+						The exporter reads these automatically. Set them once in your deployment environment —
+						no code changes needed per service.
 					</p>
 				</div>
 				<CodeBlock {...data.snippets.envVars} copyTitle="Copy environment variables" />
