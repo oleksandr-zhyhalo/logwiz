@@ -14,7 +14,8 @@
 		go: 'Go',
 		java: 'Java',
 		dotnet: '.NET',
-		http: 'HTTP'
+		http: 'HTTP',
+		docker: 'Docker'
 	};
 
 	const crumbs = $derived.by(() => {

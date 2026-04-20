@@ -1,4 +1,5 @@
 <script lang="ts">
+	import dockerIcon from '@iconify-icons/logos/docker-icon';
 	import dotnetIcon from '@iconify-icons/logos/dotnet';
 	import goIcon from '@iconify-icons/logos/go';
 	import javaIcon from '@iconify-icons/logos/java';
@@ -18,6 +19,10 @@
 				{ label: 'Java', icon: javaIcon, href: '/administration/send-logs/java' },
 				{ label: '.NET', icon: dotnetIcon, href: '/administration/send-logs/dotnet' }
 			]
+		},
+		{
+			label: 'Platforms',
+			sources: [{ label: 'Docker', icon: dockerIcon, href: '/administration/send-logs/docker' }]
 		},
 		{
 			label: 'Other',
