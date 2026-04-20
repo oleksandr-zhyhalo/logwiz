@@ -11,8 +11,9 @@ const OTEL_EXAMPLE = `import { logs } from '@opentelemetry/api-logs';
 import { LoggerProvider, BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 
-const provider = new LoggerProvider();
-provider.addLogRecordProcessor(new BatchLogRecordProcessor(new OTLPLogExporter()));
+const provider = new LoggerProvider({
+    processors: [new BatchLogRecordProcessor(new OTLPLogExporter())]
+});
 logs.setGlobalLoggerProvider(provider);
 
 logs.getLogger('hello').emit({ severityText: 'INFO', body: 'Hello from Node to Logwiz' });
@@ -38,8 +39,9 @@ import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { OpenTelemetryTransportV3 } from '@opentelemetry/winston-transport';
 import winston from 'winston';
 
-const provider = new LoggerProvider();
-provider.addLogRecordProcessor(new BatchLogRecordProcessor(new OTLPLogExporter()));
+const provider = new LoggerProvider({
+    processors: [new BatchLogRecordProcessor(new OTLPLogExporter())]
+});
 logs.setGlobalLoggerProvider(provider);
 
 const logger = winston.createLogger({

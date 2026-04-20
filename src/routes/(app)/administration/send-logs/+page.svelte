@@ -1,4 +1,7 @@
 <script lang="ts">
+	import dotnetIcon from '@iconify-icons/logos/dotnet';
+	import goIcon from '@iconify-icons/logos/go';
+	import javaIcon from '@iconify-icons/logos/java';
 	import nodejsIcon from '@iconify-icons/logos/nodejs-icon';
 	import pythonIcon from '@iconify-icons/logos/python';
 	import webIcon from '@iconify-icons/mdi/web';
@@ -10,7 +13,10 @@
 			label: 'Languages',
 			sources: [
 				{ label: 'Python', icon: pythonIcon, href: '/administration/send-logs/python' },
-				{ label: 'Node.js', icon: nodejsIcon, href: '/administration/send-logs/javascript' }
+				{ label: 'Node.js', icon: nodejsIcon, href: '/administration/send-logs/javascript' },
+				{ label: 'Go', icon: goIcon, href: '/administration/send-logs/go' },
+				{ label: 'Java', icon: javaIcon, href: '/administration/send-logs/java' },
+				{ label: '.NET', icon: dotnetIcon, href: '/administration/send-logs/dotnet' }
 			]
 		},
 		{
