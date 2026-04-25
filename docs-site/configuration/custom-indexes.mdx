@@ -12,7 +12,7 @@ This page covers the index definition you send to Quickwit. For routing logs onc
 Save the following as `my-index.yaml` and POST it to Quickwit. Replace `app_logs` with the index ID you want.
 
 ```yaml
-version: 0.7
+version: 0.9
 index_id: app_logs
 doc_mapping:
   mode: dynamic
@@ -51,11 +51,7 @@ curl -X POST 'http://quickwit:7280/api/v1/indexes' \
 
 The index appears in **Administration → Indexes** on the next page load — no Logwiz restart needed.
 
-<Note>
-	Logwiz proxies index management actions to Quickwit but does not currently expose an "create index"
-	form in the admin UI. Create the index through Quickwit's REST API or CLI, then configure its
-	display from Logwiz.
-</Note>
+Logwiz admins can also create indexes from the **Administration → Indexes → Create index** page. The page exposes the same Quickwit knobs covered below; advanced settings (retention, commit timeout) live behind an "Advanced" disclosure.
 
 ## Schema modes
 

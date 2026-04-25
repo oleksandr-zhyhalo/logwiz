@@ -14,6 +14,8 @@ import {
 } from '$lib/server/db/schema';
 import { quickwitClient } from '$lib/server/quickwit';
 import {
+	createIndex as createQuickwitIndex,
+	deleteIndexNoThrow,
 	getIndex,
 	listIndexIdsAndUris,
 	listIndexSummaries
@@ -21,10 +23,38 @@ import {
 import {
 	type AdminIndexDetail,
 	type AdminIndexSummary,
+	type CreateIndexInput,
+	type FieldMappingInput,
 	type IndexVisibility,
 	type QuickwitField,
 	type SaveIndexConfigFields
 } from '$lib/types';
+
+function deriveLogwizFields(fieldMappings: FieldMappingInput[]): {
+	levelField?: string;
+	messageField?: string;
+	tracebackField?: string | null;
+	contextFields: string[] | null;
+} {
+	let levelField: string | undefined;
+	let messageField: string | undefined;
+	let tracebackField: string | null | undefined;
+	const contextFields: string[] = [];
+
+	for (const f of fieldMappings) {
+		if (f.logwizRole === 'level') levelField = f.name;
+		else if (f.logwizRole === 'message') messageField = f.name;
+		else if (f.logwizRole === 'traceback') tracebackField = f.name;
+		if (f.inContext) contextFields.push(f.name);
+	}
+
+	return {
+		levelField,
+		messageField,
+		tracebackField: tracebackField ?? null,
+		contextFields: contextFields.length > 0 ? contextFields : null
+	};
+}
 
 function canAccessIndex(visibility: IndexVisibility, isAdmin: boolean): boolean {
 	if (visibility === 'hidden') return false;
@@ -156,6 +186,34 @@ export async function saveIndexConfig(indexId: string, fields: SaveIndexConfigFi
 			target: indexSettings.indexId,
 			set: { ...provided, updatedAt }
 		});
+}
+
+export async function createIndex(
+	input: CreateIndexInput,
+	actorId: string
+): Promise<{ indexId: string }> {
+	await createQuickwitIndex(input);
+
+	try {
+		const derived = deriveLogwizFields(input.fieldMappings);
+		await saveIndexConfig(input.indexId, {
+			displayName: input.displayName ?? null,
+			visibility: input.visibility,
+			levelField: derived.levelField,
+			messageField: derived.messageField,
+			tracebackField: derived.tracebackField,
+			contextFields: derived.contextFields
+		});
+	} catch (e) {
+		await deleteIndexNoThrow(input.indexId);
+		throw e;
+	}
+
+	console.info(
+		`[createIndex] actor=${actorId} indexId=${input.indexId} visibility=${input.visibility}`
+	);
+
+	return { indexId: input.indexId };
 }
 
 export async function getIndexForAdmin(indexId: string): Promise<AdminIndexDetail | null> {

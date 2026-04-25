@@ -251,3 +251,94 @@ export type IndexStatsCard = {
 		totalBytes: number | null;
 	};
 };
+
+// === Create Index Wizard ===
+
+export type FieldType =
+	| 'text'
+	| 'i64'
+	| 'u64'
+	| 'f64'
+	| 'bool'
+	| 'datetime'
+	| 'bytes'
+	| 'json'
+	| 'ip'
+	| 'array';
+
+export type LogwizFieldRole = 'level' | 'message' | 'traceback';
+
+type FieldCommon = {
+	name: string;
+	stored: boolean;
+	indexed: boolean;
+	fast: boolean;
+	logwizRole?: LogwizFieldRole;
+	inContext?: boolean;
+};
+
+export type TextFieldInput = FieldCommon & {
+	type: 'text';
+	tokenizer?: 'raw' | 'default' | 'en_stem' | 'lowercase' | 'chinese_compatible';
+	record?: 'basic' | 'freq' | 'position';
+	fieldnorms?: boolean;
+};
+
+export type NumericFieldInput = FieldCommon & {
+	type: 'i64' | 'u64' | 'f64';
+	coerce?: boolean;
+	output_format?: string;
+};
+
+export type DatetimeFieldInput = FieldCommon & {
+	type: 'datetime';
+	input_formats?: string[];
+	fast_precision?: 'seconds' | 'milliseconds' | 'microseconds' | 'nanoseconds';
+	output_format?: string;
+};
+
+export type BoolFieldInput = FieldCommon & { type: 'bool' };
+export type IpFieldInput = FieldCommon & { type: 'ip' };
+
+export type BytesFieldInput = FieldCommon & {
+	type: 'bytes';
+	input_format?: 'base64' | 'hex';
+	output_format?: 'base64' | 'hex';
+};
+
+export type JsonFieldInput = FieldCommon & {
+	type: 'json';
+	tokenizer?: 'raw' | 'default';
+	expand_dots?: boolean;
+};
+
+export type ScalarFieldInput =
+	| TextFieldInput
+	| NumericFieldInput
+	| DatetimeFieldInput
+	| BoolFieldInput
+	| IpFieldInput
+	| BytesFieldInput
+	| JsonFieldInput;
+
+export type ArrayFieldInput = FieldCommon & {
+	type: 'array';
+	inner: ScalarFieldInput;
+};
+
+export type FieldMappingInput = ScalarFieldInput | ArrayFieldInput;
+
+export type CreateIndexInput = {
+	indexId: string;
+	mode: 'dynamic' | 'lenient' | 'strict';
+	fieldMappings: FieldMappingInput[];
+	timestampField: string;
+	defaultSearchFields: string[];
+	retention?: {
+		period: string;
+		schedule: 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+	};
+	commitTimeoutSecs: number;
+	displayName?: string;
+	visibility: IndexVisibility;
+};

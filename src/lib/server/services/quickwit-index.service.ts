@@ -1,8 +1,20 @@
-import type { FastFieldConfig, FieldMapping, IndexMetadata } from 'quickwit-js';
+import type {
+	CreateIndexRequest,
+	FastFieldConfig,
+	FieldMapping,
+	IndexMetadata
+} from 'quickwit-js';
 import { NotFoundError } from 'quickwit-js';
 
 import { quickwitClient } from '$lib/server/quickwit';
-import type { QuickwitField, QuickwitIndexMetadata, QuickwitSource } from '$lib/types';
+import type {
+	CreateIndexInput,
+	FieldMappingInput,
+	QuickwitField,
+	QuickwitIndexMetadata,
+	QuickwitSource,
+	ScalarFieldInput
+} from '$lib/types';
 
 // Tri-state: null = unset, true = on (boolean true OR { normalizer }), false = explicitly off.
 // The null case lets downstream rules treat unset differently from explicit false.
@@ -104,5 +116,113 @@ export async function getIndex(indexId: string): Promise<QuickwitIndexMetadata |
 	} catch (e) {
 		if (e instanceof NotFoundError) return null;
 		throw e;
+	}
+}
+
+function toFieldMapping(f: FieldMappingInput): FieldMapping {
+	if (f.type === 'array') {
+		const inner = toScalarFieldMapping(f.inner);
+		const { type: innerType, ...innerRest } = stripName(inner);
+		return {
+			name: f.name,
+			...innerRest,
+			stored: f.stored,
+			indexed: f.indexed,
+			fast: f.fast,
+			type: `array<${innerType}>` as FieldMapping['type']
+		};
+	}
+	return toScalarFieldMapping(f);
+}
+
+function toScalarFieldMapping(f: ScalarFieldInput): FieldMapping {
+	const base = {
+		name: f.name,
+		type: f.type,
+		stored: f.stored,
+		indexed: f.indexed,
+		fast: f.fast
+	};
+	switch (f.type) {
+		case 'text':
+			return {
+				...base,
+				...(f.tokenizer && { tokenizer: f.tokenizer }),
+				...(f.record && { record: f.record }),
+				...(f.fieldnorms !== undefined && { fieldnorms: f.fieldnorms })
+			};
+		case 'datetime':
+			return {
+				...base,
+				...(f.input_formats && { input_formats: f.input_formats }),
+				...(f.fast_precision && { fast_precision: f.fast_precision }),
+				...(f.output_format && { output_format: f.output_format })
+			};
+		case 'bytes':
+			return {
+				...base,
+				...(f.input_format && { input_format: f.input_format }),
+				...(f.output_format && { output_format: f.output_format })
+			};
+		case 'json':
+			return {
+				...base,
+				...(f.tokenizer && { tokenizer: f.tokenizer }),
+				...(f.expand_dots !== undefined
+					? ({ expand_dots: f.expand_dots } as Record<string, unknown>)
+					: {})
+			};
+		case 'i64':
+		case 'u64':
+		case 'f64':
+			return {
+				...base,
+				...(f.coerce !== undefined ? ({ coerce: f.coerce } as Record<string, unknown>) : {}),
+				...(f.output_format && { output_format: f.output_format })
+			};
+		default:
+			return base;
+	}
+}
+
+function stripName<T extends { name: string }>(o: T): Omit<T, 'name'> {
+	const { name: _name, ...rest } = o;
+	return rest;
+}
+
+export function toCreateIndexRequest(input: CreateIndexInput): CreateIndexRequest {
+	const request: CreateIndexRequest = {
+		version: '0.9',
+		index_id: input.indexId,
+		doc_mapping: {
+			mode: input.mode,
+			field_mappings: input.fieldMappings.map(toFieldMapping),
+			timestamp_field: input.timestampField
+		},
+		indexing_settings: {
+			commit_timeout_secs: input.commitTimeoutSecs
+		}
+	};
+	if (input.defaultSearchFields.length > 0) {
+		request.search_settings = { default_search_fields: input.defaultSearchFields };
+	}
+	if (input.retention) {
+		request.retention = {
+			period: input.retention.period,
+			schedule: input.retention.schedule
+		};
+	}
+	return request;
+}
+
+export async function createIndex(input: CreateIndexInput): Promise<IndexMetadata> {
+	return quickwitClient.createIndex(toCreateIndexRequest(input));
+}
+
+export async function deleteIndexNoThrow(indexId: string): Promise<void> {
+	try {
+		await quickwitClient.deleteIndex(indexId);
+	} catch {
+		// Best-effort rollback; the original error from caller is what surfaces to the user.
 	}
 }

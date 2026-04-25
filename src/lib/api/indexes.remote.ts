@@ -8,6 +8,7 @@ import {
 	setSourceEnabledSchema,
 	sourceActionSchema
 } from '$lib/schemas/index-config';
+import { createIndexSchema } from '$lib/schemas/index-create';
 import { getIndexFieldsSchema } from '$lib/schemas/preference';
 import * as indexService from '$lib/server/services/index.service';
 
@@ -35,6 +36,16 @@ export const deleteIndex = command(indexIdSchema, async ({ indexId }) => {
 	} catch (e) {
 		if (isHttpError(e)) throw e;
 		error(400, e instanceof Error ? e.message : 'Failed to delete index');
+	}
+});
+
+export const createIndex = command(createIndexSchema, async (input) => {
+	const user = requireAdmin();
+	try {
+		return await indexService.createIndex(input, user.id);
+	} catch (e) {
+		if (isHttpError(e)) throw e;
+		error(400, e instanceof Error ? e.message : 'Failed to create index');
 	}
 });
 

@@ -24,9 +24,12 @@
 </script>
 
 <section>
-	<header class="mb-4 border-b border-base-300 pb-4">
-		<h2 class="text-xl font-semibold">Indexes</h2>
-		<p class="mt-1 text-sm text-base-content/60">Indexes synced from Quickwit</p>
+	<header class="mb-4 flex items-start justify-between gap-4 border-b border-base-300 pb-4">
+		<div>
+			<h2 class="text-xl font-semibold">Indexes</h2>
+			<p class="mt-1 text-sm text-base-content/60">Indexes synced from Quickwit</p>
+		</div>
+		<a href="/administration/indexes/new" class="btn btn-sm btn-primary">+ Create index</a>
 	</header>
 
 	<div class="mb-3 flex flex-wrap items-center gap-3">
@@ -73,11 +76,12 @@
 				</div>
 			</a>
 		{:else}
-			<div class="py-10 text-center text-sm text-base-content/60">
+			<div class="flex flex-col items-center gap-3 py-10 text-center text-sm text-base-content/60">
 				{#if search.trim() !== ''}
 					No indexes match your search.
 				{:else}
-					No indexes synced yet.
+					<p>No indexes yet.</p>
+					<a href="/administration/indexes/new" class="btn btn-primary">+ Create your first index</a>
 				{/if}
 			</div>
 		{/each}
