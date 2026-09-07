@@ -23,10 +23,13 @@ function isTruncated(agg: BucketAggregationResult | undefined): boolean {
 
 /** Maps terms-aggregation buckets to field-value entries, dropping empty-string keys. */
 function bucketsToEntries(agg: BucketAggregationResult | undefined): FieldValueEntry[] {
-	return asBuckets(agg).flatMap((b) => {
+	const totals = new Map<string, number>();
+	for (const b of asBuckets(agg)) {
 		const value = String(b.key);
-		return value === '' ? [] : [{ value, count: b.doc_count }];
-	});
+		if (value === '') continue;
+		totals.set(value, (totals.get(value) ?? 0) + b.doc_count);
+	}
+	return [...totals].map(([value, count]) => ({ value, count }));
 }
 
 type HistogramParams = {
