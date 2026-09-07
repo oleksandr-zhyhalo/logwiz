@@ -95,19 +95,6 @@ bun run format:check
 bun --filter api build
 ```
 
-## Access Revocation
-
-OAuth eligibility is re-checked on live sessions, not just at sign-in. Removing a domain or
-organization from an allow-list, or deleting a provider's credentials, signs out the users who no
-longer qualify within about five minutes — as does being removed from an allowed GitHub org.
-
-Checks fail open: if GitHub is unreachable or rate-limiting, existing sessions are kept rather
-than signed out en masse. Only a definitive answer revokes access.
-
-Linking a provider to an account also removes its password, so an allow-list change can lock out
-the admin who made it. Recovery reopens the first-admin wizard:
-[Reset admin password](https://docs.rootprint.io/configuration/reset-admin-password).
-
 ## Status
 
 Rootprint is under active development and has not reached 1.0.
