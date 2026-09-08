@@ -82,9 +82,7 @@
 </script>
 
 <div class="grid w-fit min-w-0 gap-1.5">
-	<span id={`${dd}-label`} class="text-base-content/60 text-[10px] tracking-wide uppercase">
-		Service
-	</span>
+	<span id={`${dd}-label`} class="text-muted text-caption">Service</span>
 	<button
 		type="button"
 		popovertarget={dd}
@@ -127,7 +125,7 @@
 	</div>
 	<div id={listboxId} role="listbox" aria-label="Services" class="max-h-64 overflow-y-auto py-1">
 		{#if filtered.length === 0}
-			<p class="text-base-content/50 px-3 py-6 text-center text-xs">No matching services.</p>
+			<p class="text-subtle text-caption px-3 py-6 text-center">No matching services.</p>
 		{:else}
 			{#each filtered as option, index (option.value)}
 				<button

@@ -97,7 +97,7 @@
 	const row = 'col-span-full grid grid-cols-subgrid items-center px-4';
 </script>
 
-<div class="mx-auto max-w-7xl px-12 py-12">
+<div class="settings-page">
 	<PageHeader title="API keys" description="Ingest keys let shippers send logs into Rootprint." />
 
 	{#if noIndexes}
@@ -110,7 +110,7 @@
 	<div class="mt-8 flex flex-wrap items-center gap-4">
 		<SearchInput bind:value={search} placeholder="Search API keys..." label="Search API keys" />
 
-		<span class="text-base-content/60 text-xs">[{countLabel}]</span>
+		<span class="text-subtle text-caption tabular-nums">[{countLabel}]</span>
 
 		<button class="btn btn-primary btn-sm" onclick={() => (createOpen = true)} disabled={noIndexes}>
 			<Plus class="h-3.5 w-3.5" />
@@ -121,7 +121,7 @@
 	<div class="mt-4 overflow-x-auto">
 		<div class="min-w-[40rem]">
 			<ListCard cols={colTracks} empty={filtered.length === 0} {emptyMessage}>
-				<div class="{row} text-base-content/50 py-2.5 text-[10px] tracking-wide uppercase">
+				<div class="{row} section-label py-2.5">
 					<span>Name</span>
 					<span>Token</span>
 					<span>Index</span>
@@ -135,7 +135,7 @@
 						<div class="min-w-0">
 							<div class="text-base-content/70 truncate font-mono text-xs">{key.indexId}</div>
 						</div>
-						<div class="text-base-content/50 text-xs">
+						<div class="text-subtle text-caption">
 							{key.lastUsedAt ? formatRelativeTime(key.lastUsedAt) : 'Never'}
 						</div>
 						<div class="flex justify-end gap-1">

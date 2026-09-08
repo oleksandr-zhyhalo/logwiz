@@ -62,7 +62,7 @@
 	}
 </script>
 
-<div class="mx-auto max-w-7xl px-12 py-12">
+<div class="settings-page">
 	<PageHeader title="Users" description="Create users, manage roles, and revoke access." />
 
 	<div class="mt-8 flex flex-wrap items-center gap-4">
@@ -75,7 +75,7 @@
 					aria-selected={active}
 					class="tab-underline flex h-full items-center text-sm transition-colors {active
 						? 'text-base-content'
-						: 'text-base-content/50 hover:text-base-content'}"
+						: 'text-muted hover:text-base-content'}"
 					onclick={() => (filter = opt.id)}
 				>
 					{opt.label}
@@ -85,7 +85,7 @@
 
 		<SearchInput bind:value={search} placeholder="Search name or email…" label="Search members" />
 
-		<span class="text-base-content/60 text-xs">[{countLabel}]</span>
+		<span class="text-subtle text-caption tabular-nums">[{countLabel}]</span>
 
 		<button class="btn btn-primary btn-sm" onclick={() => (createUserOpen = true)}>
 			<UserPlus class="h-3.5 w-3.5" />
@@ -99,9 +99,7 @@
 			empty={filtered.length === 0}
 			{emptyMessage}
 		>
-			<div
-				class="text-base-content/50 col-span-full grid grid-cols-subgrid items-center px-4 py-2.5 text-[10px] tracking-wide uppercase"
-			>
+			<div class="section-label col-span-full grid grid-cols-subgrid items-center px-4 py-2.5">
 				<span>User</span>
 				<span>Role</span>
 				<span>Status</span>
@@ -122,13 +120,9 @@
 
 					<div>
 						{#if user.role === 'admin'}
-							<span
-								class="badge badge-sm badge-soft badge-neutral text-[10px] tracking-wide uppercase"
-							>
-								Admin
-							</span>
+							<span class="badge badge-sm badge-soft badge-neutral text-caption"> Admin </span>
 						{:else}
-							<span class="text-base-content/50 text-xs">Member</span>
+							<span class="text-muted text-caption">Member</span>
 						{/if}
 					</div>
 
@@ -142,7 +136,7 @@
 						{/if}
 					</div>
 
-					<div class="text-base-content/50 text-xs">
+					<div class="text-subtle text-caption">
 						{user.lastActive ? formatRelativeTime(user.lastActive) : 'Never'}
 					</div>
 

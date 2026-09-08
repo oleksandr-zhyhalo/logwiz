@@ -152,7 +152,7 @@
 {#snippet pageHeader(serviceNames: string[] | null)}
 	<header class="flex flex-wrap items-end justify-between gap-4">
 		<div class="min-w-0">
-			<p class="text-base-content/45 text-[10px] tracking-widest uppercase">Services</p>
+			<p class="eyebrow">Services</p>
 			<h1 class="mt-0.5 truncate text-2xl tracking-tight" title={data.service ?? 'All services'}>
 				{data.service ?? 'All services'}
 			</h1>
@@ -204,7 +204,7 @@
 				/>
 
 				{#if data.service === null && health.servicesTruncated}
-					<p class="text-warning -mt-3 text-xs">
+					<p class="text-warning-ink -mt-3 text-xs">
 						Showing the {health.services.length} most active services.
 					</p>
 				{/if}
@@ -230,8 +230,7 @@
 						>
 							{tab.label}
 							{#if tab.count !== undefined}
-								<span
-									class={['ml-1 tabular-nums', tab.error ? 'text-error' : 'text-base-content/40']}
+								<span class={['ml-1 tabular-nums', tab.error ? 'text-error' : 'text-subtle']}
 									>{tab.count}</span
 								>
 							{/if}

@@ -34,21 +34,21 @@
 <section class="flex flex-col gap-2" aria-labelledby="service-table-heading">
 	<div class="flex flex-wrap items-end justify-between gap-3">
 		<div>
-			<h2 id="service-table-heading" class="eyebrow">Services</h2>
-			<p class="text-base-content/50 mt-1 text-xs">
+			<h2 id="service-table-heading" class="section-label">Services</h2>
+			<p class="text-muted text-caption mt-1">
 				Inbound request volume, failure share and latency per service. Select one to scope the page.
 			</p>
 		</div>
 		<div class="flex flex-wrap items-center gap-3">
 			<div class="flex items-center gap-2" aria-label="Rows per page">
-				<span class="text-base-content/50 text-[10px] tracking-wide uppercase">Rows</span>
+				<span class="text-muted text-caption">Rows</span>
 				<div class="border-line divide-line flex divide-x overflow-hidden rounded border">
 					{#each LIMITS as option (option)}
 						<button
 							type="button"
-							class="h-7 min-w-9 px-2 text-xs tabular-nums transition-colors {limit === option
+							class="text-caption h-7 min-w-9 px-2 tabular-nums transition-colors {limit === option
 								? 'bg-base-content text-base-100'
-								: 'text-base-content/60 hover:bg-base-200 hover:text-base-content'}"
+								: 'text-muted hover:bg-base-200 hover:text-base-content'}"
 							aria-pressed={limit === option}
 							onclick={() => selectLimit(option)}
 						>
@@ -59,13 +59,13 @@
 			</div>
 			{#if services.length > limit}
 				<div class="flex items-center gap-2">
-					<span class="text-base-content/50 text-xs tabular-nums">
+					<span class="text-muted text-caption tabular-nums">
 						{start + 1}–{start + rows.length} of {services.length}
 					</span>
 					<div class="border-line divide-line flex divide-x overflow-hidden rounded border">
 						<button
 							type="button"
-							class="text-base-content/60 hover:bg-base-200 hover:text-base-content disabled:text-base-content/20 grid h-7 w-8 place-items-center transition-colors disabled:hover:bg-transparent"
+							class="text-muted hover:bg-base-200 hover:text-base-content disabled:text-base-content/20 grid h-7 w-8 place-items-center transition-colors disabled:hover:bg-transparent"
 							aria-label="Previous page"
 							disabled={pageIndex === 0}
 							onclick={() => (pageIndex -= 1)}
@@ -74,7 +74,7 @@
 						</button>
 						<button
 							type="button"
-							class="text-base-content/60 hover:bg-base-200 hover:text-base-content disabled:text-base-content/20 grid h-7 w-8 place-items-center transition-colors disabled:hover:bg-transparent"
+							class="text-muted hover:bg-base-200 hover:text-base-content disabled:text-base-content/20 grid h-7 w-8 place-items-center transition-colors disabled:hover:bg-transparent"
 							aria-label="Next page"
 							disabled={pageIndex >= lastPage}
 							onclick={() => (pageIndex += 1)}
@@ -87,11 +87,9 @@
 		</div>
 	</div>
 	<div class="border-line rounded-box overflow-x-auto border">
-		<table class="table-xs table min-w-[680px]">
+		<table class="table-xs text-caption table min-w-[680px]">
 			<thead>
-				<tr
-					class="bg-base-200/70 text-base-content/60 text-[10px] font-medium tracking-wide uppercase"
-				>
+				<tr class="bg-base-200/70 text-muted text-caption font-medium">
 					<th scope="col" class="w-10 text-right" aria-label="Rank">#</th>
 					<th scope="col">Service</th>
 					<th scope="col" class="text-right">Requests</th>
@@ -104,13 +102,13 @@
 				{#each rows as service, index (service.name)}
 					{@const errorRate = service.requests === 0 ? 0 : service.errors / service.requests}
 					<tr class="border-line/40 even:bg-base-200/50 border-b last:border-b-0">
-						<td class="w-10 text-right font-mono text-xs tabular-nums">
+						<td class="text-caption w-10 text-right tabular-nums">
 							{start + index + 1}
 						</td>
 						<td class="max-w-xs py-2">
 							<button
 								type="button"
-								class="hover:text-base-content/70 block max-w-full truncate font-mono text-xs underline-offset-2 hover:underline"
+								class="hover:text-muted text-caption block max-w-full truncate font-mono underline-offset-2 hover:underline"
 								title={service.name}
 								onclick={() => onSelect(service.name)}
 							>
@@ -118,7 +116,7 @@
 							</button>
 						</td>
 						<td class="text-right tabular-nums">{formatCount(service.requests)}</td>
-						<td class="text-right tabular-nums" class:text-warning={service.errors > 0}>
+						<td class="text-right tabular-nums" class:text-warning-ink={service.errors > 0}>
 							{formatPercent(errorRate)}
 						</td>
 						<td class="text-right whitespace-nowrap tabular-nums">

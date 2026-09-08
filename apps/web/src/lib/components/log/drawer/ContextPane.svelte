@@ -219,7 +219,7 @@
 		/>
 
 		{#if l.error}
-			<p class="text-warning px-3 py-2 text-sm">{l.error}</p>
+			<p class="text-warning-ink px-3 py-2 text-sm">{l.error}</p>
 		{/if}
 
 		{#if l.loadingInitial}
@@ -237,7 +237,7 @@
 							</div>
 						{:else if l.noMoreAfter}
 							<p
-								class="border-line text-base-content/40 border-b border-dashed py-2 text-center text-[10px]"
+								class="border-line text-subtle text-caption border-b border-dashed py-2 text-center"
 							>
 								No newer logs
 							</p>
@@ -264,7 +264,7 @@
 							</div>
 						{:else if l.noMoreBefore}
 							<p
-								class="border-line text-base-content/40 border-t border-dashed py-2 text-center text-[10px]"
+								class="border-line text-subtle text-caption border-t border-dashed py-2 text-center"
 							>
 								No older logs
 							</p>

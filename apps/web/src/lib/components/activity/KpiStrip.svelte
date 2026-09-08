@@ -12,7 +12,7 @@
 
 	const cellClass = 'flex flex-col gap-1 px-4 py-3';
 	const seamClass = 'md:border-l md:border-line';
-	const labelClass = 'text-base-content/60 text-[10px] uppercase tracking-wide';
+	const labelClass = 'section-label';
 	const valueClass = 'text-xl tabular-nums whitespace-nowrap';
 </script>
 

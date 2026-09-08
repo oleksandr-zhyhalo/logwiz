@@ -207,8 +207,10 @@
 </script>
 
 <div class="bg-base-100 flex h-full flex-col">
-	<!-- h-12 to align with the rail header + SearchToolbar -->
-	<div class="border-line bg-base-100 sticky top-0 z-10 flex h-12 items-center border-b px-3">
+	<!-- Matches the 48px navigation/toolbar band; narrow explorers add a separate query row. -->
+	<div
+		class="border-line bg-base-100 sticky top-0 z-10 flex h-12 shrink-0 items-center border-b px-3"
+	>
 		<label class="input input-sm w-full gap-2">
 			<Search class="text-base-content/50 h-3.5 w-3.5" />
 			<input
@@ -220,7 +222,7 @@
 				onkeydown={handleKeydown}
 			/>
 			{#if normalized && !isAllEmpty}
-				<span class="text-base-content/50 text-xs tabular-nums">{matchCount}</span>
+				<span class="text-subtle text-caption tabular-nums">{matchCount}</span>
 			{/if}
 		</label>
 	</div>
@@ -229,7 +231,7 @@
 		{#if store.fieldsError}
 			<div class="flex flex-col items-center gap-2 p-6 text-center">
 				<p class="text-error text-xs">{store.fieldsError}</p>
-				<p class="text-base-content/50 text-[10px]">Field list failed to load.</p>
+				<p class="text-muted text-caption">Field list failed to load.</p>
 				<button
 					type="button"
 					class="btn btn-ghost btn-xs mt-1"
@@ -239,12 +241,12 @@
 				</button>
 			</div>
 		{:else if isAllEmpty}
-			<p class="text-base-content/50 p-6 text-center text-xs">No matches</p>
+			<p class="text-subtle text-caption p-6 text-center">No matches</p>
 		{:else}
 			{#if (store.fieldConfig?.levelField ?? null) !== null}
 				{#if store.histogramLoading}
 					<section class="p-3">
-						<p class="eyebrow mb-2">Levels</p>
+						<p class="section-label mb-2">Levels</p>
 						<div class="flex items-center justify-center py-2">
 							<span class="loading loading-spinner loading-xs"></span>
 						</div>
@@ -254,7 +256,7 @@
 					{@const anyActiveForField =
 						levelField !== null && store.filters.some((f) => f.field === levelField && !f.exclude)}
 					<section class="p-3">
-						<p class="eyebrow mb-2">Levels</p>
+						<p class="section-label mb-2">Levels</p>
 						<ul class="space-y-0.5">
 							{#each sortedLevels as level (level.name)}
 								{@const isActive =
@@ -263,10 +265,13 @@
 								<li>
 									<button
 										type="button"
-										class="flex w-full cursor-pointer items-center gap-2 rounded px-1.5 py-0.5 text-left font-mono text-xs transition-colors duration-150 disabled:cursor-not-allowed"
+										class="text-caption flex w-full cursor-pointer items-center gap-2 rounded px-1.5 py-0.5 text-left transition-colors duration-150 disabled:cursor-not-allowed"
 										role="checkbox"
 										aria-checked={isActive}
 										disabled={levelField === null || level.name === UNKNOWN_LEVEL}
+										title={level.name === UNKNOWN_LEVEL
+											? 'Severity is missing or blank'
+											: undefined}
 										onclick={() => store.toggleLevelFilter(level.name)}
 									>
 										{#if showFull}
@@ -286,7 +291,7 @@
 										>
 											{level.name}
 										</span>
-										<span class="text-base-content/50 shrink-0 text-right tabular-nums">
+										<span class="text-subtle shrink-0 text-right tabular-nums">
 											{level.count === null ? '—' : level.count.toLocaleString()}
 										</span>
 									</button>
@@ -298,7 +303,7 @@
 			{/if}
 
 			{#if store.fieldsLoading && fields.length === 0}
-				<div class="text-base-content/50 flex items-center justify-center gap-2 p-6 text-xs">
+				<div class="text-subtle text-caption flex items-center justify-center gap-2 p-6">
 					<span class="loading loading-spinner loading-xs"></span>
 					Loading fields…
 				</div>
@@ -320,9 +325,7 @@
 									<ChevronDown class="text-base-content/60 h-3 w-3 shrink-0" />
 								{/if}
 								<span class="flex-1 text-left text-xs font-medium">{group.label}</span>
-								<span class="text-base-content/40 text-[10px] leading-4"
-									>({group.fields.length})</span
-								>
+								<span class="text-subtle text-caption">({group.fields.length})</span>
 							</button>
 							{#if !isCollapsed}
 								{#each group.fields as field (field.name)}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { CircleX, ExternalLink, SearchX, Send } from 'lucide-svelte';
+	import { readString, writeString } from '$lib/utils/safe-storage';
 
 	import FieldPanel from '$lib/components/sidebar/FieldPanel.svelte';
 	import LogDetailDrawer from '$lib/components/log/LogDetailDrawer.svelte';
@@ -45,7 +46,11 @@
 		buildGridTemplate(store.activeFields, columnWidths, messageField, messageWidth, store.lineWrap)
 	);
 
-	let chartCollapsed = $state(false);
+	const CHART_STORAGE_KEY = 'rootprint:chart-collapsed';
+
+	let chartCollapsed = $state(readString(CHART_STORAGE_KEY) === '1');
+	$effect(() => writeString(CHART_STORAGE_KEY, chartCollapsed ? '1' : '0'));
+
 	let selectedLog = $state<LogHit | null>(null);
 
 	let prevIndexId: string | null | undefined = undefined;
@@ -116,11 +121,11 @@
 	</div>
 {:else}
 	<div class="flex h-full min-h-0 w-full" inert={selectedLog !== null}>
-		<aside class="border-line w-64 shrink-0 border-r">
+		<aside aria-label="Log fields" class="border-line w-64 shrink-0 border-r">
 			<FieldPanel {store} />
 		</aside>
 
-		<div class="flex min-w-0 flex-1 flex-col overflow-hidden">
+		<div class="@container/explorer flex min-w-0 flex-1 flex-col overflow-hidden">
 			<SearchToolbar {store} />
 			<FilterChips {store} />
 
@@ -149,7 +154,7 @@
 								<span class="loading loading-spinner loading-sm"></span>
 								<div>
 									<p class="text-sm">Searching logs</p>
-									<p class="text-base-content/45 text-xs">Fetching the latest results…</p>
+									<p class="text-subtle text-caption">Fetching the latest results…</p>
 								</div>
 							</div>
 						</div>
@@ -173,7 +178,7 @@
 									<SearchX class="h-5 w-5" aria-hidden="true" />
 								</div>
 								<h2 class="mt-4 text-base">No logs match this search</h2>
-								<p class="text-base-content/50 mx-auto mt-1 max-w-xs text-xs leading-5">
+								<p class="text-subtle text-caption mx-auto mt-1 max-w-xs leading-5">
 									Try widening the time range or updating your query and filters.
 								</p>
 								{#if store.filters.length > 0}

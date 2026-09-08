@@ -94,8 +94,14 @@ Use semantic DaisyUI classes (`bg-base-100`, `text-base-content`, `btn-primary`,
 | `success`      | Confirmation                                           |
 | `warning`      | Caution                                                |
 | `error`        | Field/form errors                                      |
+| `muted`        | Secondary labels and supporting text on light surfaces |
+| `subtle`       | Tertiary metadata on light surfaces, not disabled text |
+| `info-ink`     | Blue text and chart strokes on light surfaces          |
+| `warning-ink`  | Warning text and chart strokes on light surfaces       |
 
 The brand-green is the visual signature. Use it for one primary CTA per surface, not for decoration.
+
+The bright `info`, `accent`, and `warning` colors are fills, not small-text colors on white. Use the ink variants for foregrounds and the `--chart-N` ramp for semantic chart lines. Do not reuse low-opacity disabled styling for essential metadata. Severity charts and log-row strips use the full categorical palette; row hover highlights use the severity color at 14%. Always expose severity as text to assistive technology.
 
 ### Typography
 
@@ -103,19 +109,26 @@ The brand-green is the visual signature. Use it for one primary CTA per surface,
 - Body is `0.875rem / 1.5rem` (14px / 24px), small and data-dense by default.
 - Headings are **regular weight (400)** with **tight tracking** at large sizes. Do not use `font-bold` on headings. The size carries the hierarchy, not the weight. The base layer in `app.css` already sets `font-weight: 400` and `letter-spacing: -0.02em` on `h1–h4`; don't override it.
 - Tokens `text-display`, `text-h1`, `text-h2`, `text-h3` are available via Tailwind v4's `@theme` for arbitrary headings outside the HTML hierarchy.
-- Mono text is for: code, IDs, timestamps, small metadata labels. Not for body prose.
+- Use `text-ui` (13px / 20px) for compact controls, `text-caption` (12px / 16px) for metadata, and `.section-label` (12px / 18px, medium) for workspace section and table labels. Standard `text-sm` remains appropriate for navigation, forms, and body copy.
+- Inline filter/form labels use normal-weight `text-caption text-muted`, not `.section-label`. Do not combine `.section-label` with `text-caption`: its 18px line height is part of the heading treatment.
+- Mono text is for code, queries, IDs, timestamps, and log payloads. Use sans for navigation, controls, labels, and prose. Use `tabular-nums` for aligned numeric metadata without making its labels monospace.
+- Keep important labels, error messages, and counts at 12px or above. Reserve smaller sizes for constrained chart/trace annotations, not general interface text.
+- Intentional small-text exceptions are avatar initials and waterfall-axis, branch-count, and duration annotations. Low-opacity icons, separators, disabled controls, and de-emphasized unselected severity filters are also intentional; they are not a pattern for readable metadata.
+- Dense workspace labels use sentence case and normal tracking. Preserve acronym and unit casing (`HTTP`, `ms`); do not uppercase a container that includes values.
 
 ### Material — Flat
 
 - No shadows on in-page surfaces (cards, panels, tables, forms). Elevation is implied by `base-200` surfaces and `border-line` hairlines, not by drop shadow. One exception: floating overlays **without a backdrop dim** (chart tooltips, popovers, the log drawer) may carry a shadow to separate from the content beneath. Modals get a dimmed backdrop and must stay `shadow-none` (see `ui/Modal`).
-- Small radii: `rounded` (4px) for fields and controls, `rounded-box` (8px) for cards. Avoid `rounded-xl`/`rounded-2xl`/`rounded-full` except for genuine pill/avatar shapes.
+- Small radii: `rounded` and `rounded-box` (4px) for fields, controls, and panels. Avoid `rounded-xl`/`rounded-2xl`/`rounded-full` except for genuine pill/avatar shapes.
 - `--depth: 0` and `--noise: 0` are set on the theme. Don't override them.
 
 ### Reusable Component Classes
 
 Defined in `src/app.css` under `@layer components`:
 
-- `.eyebrow` — uppercase sans micro-label used **above** a heading (also the title style for chart panels). Use it instead of `<small>` or a second `<p>` to introduce the page/section.
+- `.eyebrow` — uppercase sans micro-label used **above** a page heading. Reserve it for page introductions, not chart titles or result metadata.
+- `.section-label` — sentence-case sans label for workspace sections, chart titles, and table headings.
+- `.settings-page` — centered settings content with padding based on the named `settings` container width. Use it instead of fixed `px-12 py-12` page shells.
 
 Hairlines are not a class but a color token: `--color-line` (1px-intent line at 10% of `base-content`, defined in `app.css` under `@theme inline`). It generates `border-line`, `border-b-line`, `divide-line`, etc. Use it to frame cards, panels, dividers on the light canvas — it replaces `shadow-*` for elevation. Compose with Tailwind utilities, e.g. `class="border-line rounded-box border p-8"`.
 
@@ -125,6 +138,7 @@ Hairlines are not a class but a color token: `--color-line` (1px-intent line at 
 - Field-level errors render as **micro-text** under the input (`class="text-error text-xs"`, no mono — `ui/Field` is the contract), not inside an alert chip.
 - Form-level errors render as a top-of-card `alert alert-error` chip.
 - The default 2px DaisyUI focus ring on `.input`/`.select`/`.textarea` is overridden in `app.css` to a 1px `base-content` border-color shift. Same footprint, no visual jump — keep it that way and don't add `focus:ring-*` utilities on form controls.
+- Invalid inputs also use the contrasting focus border; their error message and `aria-invalid` retain the error state. Do not remove visible keyboard focus from custom buttons.
 
 ### Page Composition
 
@@ -132,7 +146,11 @@ Recurring patterns to reach for before inventing new ones:
 
 - **Eyebrow + Heading + Body** — `<p class="eyebrow">…</p>` then `<h1 class="text-3xl tracking-tight">…</h1>` then body. This is the default page-header shape.
 - **Hairline panel** — `<div class="border-line rounded-box border p-8">…</div>` on `base-200` for any framed content. The auth card and the home session panel both use this.
-- **Mono metadata grid** — when listing key/value metadata (emails, IDs, timestamps), use a `grid` of `<dt class="text-base-content/50 text-xs uppercase tracking-wider">` + `<dd class="font-mono text-sm">`. See `routes/(app)/+page.svelte`.
+- **Metadata grid** — use sentence-case `<dt class="text-muted text-caption">` labels and sans values, reserving `<dd class="font-mono text-sm">` for IDs, timestamps, and code.
+- The whole app is desktop-only, including authentication and settings. Below `md`, the root layout renders only a desktop-size notice, not route content or controls behind an overlay.
+- The primary sidebar defaults to compact below `xl` on mount when no preference is saved. Its toggle stays available at every supported width; explicit choices persist, and resizing does not change the sidebar state. Settings navigation becomes horizontal below `lg`; form rows use their own `settings-row` container, distinct from the page's `settings` container.
+- The search toolbar uses one 48px row when the explorer container is at least 44rem wide. Below that, the query occupies a secondary row. Keep the field-panel and navigation headers aligned to the primary 48px band, not the total wrapped toolbar height.
+- The explorer's field panel is always visible and has no collapse control. Only the frequency chart has a persisted visibility preference. Keep raw field paths in table headers, query operations, and tooltips; do not replace them with friendly labels.
 
 ### What Not to Do
 
