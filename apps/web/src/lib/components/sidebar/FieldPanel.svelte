@@ -222,7 +222,7 @@
 				onkeydown={handleKeydown}
 			/>
 			{#if normalized && !isAllEmpty}
-				<span class="text-subtle text-caption tabular-nums">{matchCount}</span>
+				<span class="text-subtle text-xs tabular-nums">{matchCount}</span>
 			{/if}
 		</label>
 	</div>
@@ -231,7 +231,7 @@
 		{#if store.fieldsError}
 			<div class="flex flex-col items-center gap-2 p-6 text-center">
 				<p class="text-error text-xs">{store.fieldsError}</p>
-				<p class="text-muted text-caption">Field list failed to load.</p>
+				<p class="text-muted text-xs">Field list failed to load.</p>
 				<button
 					type="button"
 					class="btn btn-ghost btn-xs mt-1"
@@ -241,7 +241,7 @@
 				</button>
 			</div>
 		{:else if isAllEmpty}
-			<p class="text-subtle text-caption p-6 text-center">No matches</p>
+			<p class="text-subtle p-6 text-center text-xs">No matches</p>
 		{:else}
 			{#if (store.fieldConfig?.levelField ?? null) !== null}
 				{#if store.histogramLoading}
@@ -265,7 +265,7 @@
 								<li>
 									<button
 										type="button"
-										class="text-caption flex w-full cursor-pointer items-center gap-2 rounded px-1.5 py-0.5 text-left transition-colors duration-150 disabled:cursor-not-allowed"
+										class="flex w-full cursor-pointer items-center gap-2 rounded px-1.5 py-0.5 text-left text-xs transition-colors duration-150 disabled:cursor-not-allowed"
 										role="checkbox"
 										aria-checked={isActive}
 										disabled={levelField === null || level.name === UNKNOWN_LEVEL}
@@ -303,7 +303,7 @@
 			{/if}
 
 			{#if store.fieldsLoading && fields.length === 0}
-				<div class="text-subtle text-caption flex items-center justify-center gap-2 p-6">
+				<div class="text-subtle flex items-center justify-center gap-2 p-6 text-xs">
 					<span class="loading loading-spinner loading-xs"></span>
 					Loading fields…
 				</div>
@@ -325,7 +325,7 @@
 									<ChevronDown class="text-base-content/60 h-3 w-3 shrink-0" />
 								{/if}
 								<span class="flex-1 text-left text-xs font-medium">{group.label}</span>
-								<span class="text-subtle text-caption">({group.fields.length})</span>
+								<span class="text-subtle text-xs">({group.fields.length})</span>
 							</button>
 							{#if !isCollapsed}
 								{#each group.fields as field (field.name)}

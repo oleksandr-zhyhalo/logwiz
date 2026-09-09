@@ -107,7 +107,7 @@ The brand-green is the visual signature. Use it for one primary CTA per surface,
 - Body is `0.875rem / 1.5rem` (14px / 24px), small and data-dense by default.
 - Headings are **regular weight (400)** with **tight tracking** at large sizes. Do not use `font-bold` on headings. The size carries the hierarchy, not the weight. The base layer in `app.css` already sets `font-weight: 400` and `letter-spacing: -0.02em` on `h1–h4`; don't override it.
 - Tokens `text-display`, `text-h1`, `text-h2`, `text-h3` are available via Tailwind v4's `@theme` for arbitrary headings outside the HTML hierarchy.
-- Use `text-ui` (13px / 20px) for compact controls, `text-caption` (12px / 16px) for metadata, and `.section-label` (12px / 18px, medium) for workspace section and table labels. Standard `text-sm` remains appropriate for navigation, forms, and body copy.
+- Use `text-ui` (13px / 20px) for compact controls, `text-xs` (12px / 16px) for metadata, and `.section-label` (12px / 18px, medium) for workspace section and table labels. Standard `text-sm` remains appropriate for navigation, forms, and body copy.
 - Mono text is for code, queries, IDs, timestamps, and log payloads — sans everywhere else. Use `tabular-nums` for aligned numbers rather than making their labels monospace.
 
 ### Material — Flat
@@ -139,8 +139,8 @@ Recurring patterns to reach for before inventing new ones:
 
 - **Eyebrow + Heading + Body** — `<p class="eyebrow">…</p>` then `<h1 class="text-3xl tracking-tight">…</h1>` then body. This is the default page-header shape.
 - **Hairline panel** — `<div class="border-line rounded-box border p-8">…</div>` on `base-200` for any framed content. The auth card and the home session panel both use this.
-- **Metadata grid** — use sentence-case `<dt class="text-muted text-caption">` labels and sans values, reserving `<dd class="font-mono text-sm">` for IDs, timestamps, and code.
-- The app is desktop-only. Below `md` the root layout renders a desktop-size notice instead of route content.
+- **Metadata grid** — use sentence-case `<dt class="text-muted text-xs">` labels and sans values, reserving `<dd class="font-mono text-sm">` for IDs, timestamps, and code.
+- The app is desktop-only: below `48rem` the root layout renders a desktop-size notice instead of route content. That is exactly Tailwind's `md` breakpoint, so **`sm:` and `md:` variants never apply** inside the app — their unprefixed values are dead code. Reach for `lg:`/`xl:` or a container query when a surface really needs to reflow.
 
 ### What Not to Do
 

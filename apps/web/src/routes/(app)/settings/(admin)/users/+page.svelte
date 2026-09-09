@@ -85,7 +85,7 @@
 
 		<SearchInput bind:value={search} placeholder="Search name or email…" label="Search members" />
 
-		<span class="text-subtle text-caption tabular-nums">[{countLabel}]</span>
+		<span class="text-subtle text-xs tabular-nums">[{countLabel}]</span>
 
 		<button class="btn btn-primary btn-sm" onclick={() => (createUserOpen = true)}>
 			<UserPlus class="h-3.5 w-3.5" />
@@ -120,9 +120,9 @@
 
 					<div>
 						{#if user.role === 'admin'}
-							<span class="badge badge-sm badge-soft badge-neutral text-caption"> Admin </span>
+							<span class="badge badge-sm badge-soft badge-neutral text-xs"> Admin </span>
 						{:else}
-							<span class="text-muted text-caption">Member</span>
+							<span class="text-muted text-xs">Member</span>
 						{/if}
 					</div>
 
@@ -136,7 +136,7 @@
 						{/if}
 					</div>
 
-					<div class="text-subtle text-caption">
+					<div class="text-subtle text-xs">
 						{user.lastActive ? formatRelativeTime(user.lastActive) : 'Never'}
 					</div>
 

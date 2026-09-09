@@ -73,8 +73,6 @@
 
 	--text-ui: 0.8125rem;
 	--text-ui--line-height: 1.25rem;
-	--text-caption: 0.75rem;
-	--text-caption--line-height: 1rem;
 
 	--text-display: 4rem;
 	--text-display--line-height: 4.5rem;
@@ -145,14 +143,15 @@
 
 	.section-label {
 		font-family: var(--font-sans);
-		font-size: var(--text-caption);
+		font-size: var(--text-xs);
 		line-height: 1.125rem;
 		font-weight: 500;
 		letter-spacing: normal;
 		color: var(--color-muted);
 	}
 
-	/* The desktop gate keeps the settings container at 48rem or wider, so 2rem is the floor. */
+	/* The container is the viewport minus the app sidebar, so it can be narrower than the
+	   48rem desktop gate; 2rem is the floor. */
 	.settings-page {
 		@apply mx-auto max-w-7xl p-8;
 		@container settings (min-width: 64rem) {
@@ -249,7 +248,8 @@
 }
 
 /* Chart colour ramp — referenced directly via var(--chart-N) by the uPlot charts.
-   Semantic ordering: brand → accent → status (success/warning/error). */
+   Ordering: brand → info → status (success/warning/error), using the ink variants
+   so strokes stay legible on the light canvas. */
 :root {
 	--chart-1: var(--color-secondary);
 	--chart-2: var(--color-info-ink);

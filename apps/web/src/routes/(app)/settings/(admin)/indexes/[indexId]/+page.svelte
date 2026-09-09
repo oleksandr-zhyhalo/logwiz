@@ -83,7 +83,7 @@
 		<div class="flex flex-col gap-3">
 			<div class="flex flex-wrap items-center gap-4">
 				<SearchInput bind:value={fieldFilter} placeholder="Search fields…" label="Search fields" />
-				<span class="text-subtle text-caption tabular-nums">[{fieldsCountLabel}]</span>
+				<span class="text-subtle text-xs tabular-nums">[{fieldsCountLabel}]</span>
 			</div>
 
 			<ListCard
@@ -123,7 +123,7 @@
 					placeholder="Search sources…"
 					label="Search sources"
 				/>
-				<span class="text-subtle text-caption tabular-nums">[{sourcesCountLabel}]</span>
+				<span class="text-subtle text-xs tabular-nums">[{sourcesCountLabel}]</span>
 				<a href="/settings/indexes/{detail.indexId}/sources/new" class="btn btn-primary btn-sm">
 					<Plus class="h-3.5 w-3.5" />
 					Create source

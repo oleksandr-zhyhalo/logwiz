@@ -183,9 +183,7 @@
 	}
 </script>
 
-<div
-	class="border-line bg-base-100 flex min-h-12 shrink-0 flex-wrap items-center gap-2 border-b px-3 py-2 @min-[44rem]/explorer:h-12 @min-[44rem]/explorer:flex-nowrap @min-[44rem]/explorer:py-0"
->
+<div class="border-line bg-base-100 flex h-12 shrink-0 items-center gap-2 border-b px-3">
 	<ViewsDropdown {store} />
 
 	<select
@@ -199,9 +197,7 @@
 		{/each}
 	</select>
 
-	<div
-		class="relative order-last w-full min-w-0 @min-[44rem]/explorer:order-none @min-[44rem]/explorer:w-auto @min-[44rem]/explorer:flex-1"
-	>
+	<div class="relative min-w-0 flex-1">
 		<input
 			type="text"
 			class="input input-sm w-full font-mono text-xs placeholder:font-sans"

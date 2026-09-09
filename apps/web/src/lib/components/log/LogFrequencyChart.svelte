@@ -164,7 +164,7 @@
 			{/if}
 			<span class="section-label text-left"> Frequency </span>
 		</button>
-		<div class="text-subtle text-caption flex items-center gap-1.5 tabular-nums">
+		<div class="text-subtle flex items-center gap-1.5 text-xs tabular-nums">
 			{#if loading}
 				<span class="loading loading-spinner loading-xs mr-1"></span>
 			{/if}
@@ -189,13 +189,13 @@
 					</div>
 				{:else if !columnarData}
 					<div class="flex h-[150px] flex-col items-center justify-center gap-1">
-						<p class="text-muted text-caption">No frequency data</p>
-						<p class="text-subtle text-caption">Try adjusting your time range or query filters</p>
+						<p class="text-muted text-xs">No frequency data</p>
+						<p class="text-subtle text-xs">Try adjusting your time range or query filters</p>
 					</div>
 				{:else}
 					<UplotChart data={columnarData.uplot} height={HEIGHT} {makeOpts}>
 						{#snippet tooltip(idx)}
-							<div class="text-muted text-caption mb-1 tabular-nums">
+							<div class="text-muted mb-1 text-xs tabular-nums">
 								{formatChartTooltip(columnarData.uplot[0][idx])}
 							</div>
 							{#each levels as level, i (level)}

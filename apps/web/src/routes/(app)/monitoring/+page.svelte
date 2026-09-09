@@ -166,9 +166,7 @@
 	</header>
 {/snippet}
 
-<div
-	class="min-h-0 w-full flex-1 overflow-x-hidden overflow-y-auto px-4 py-6 sm:px-8 lg:px-10 lg:py-8"
->
+<div class="min-h-0 w-full flex-1 overflow-x-hidden overflow-y-auto px-8 py-6 lg:px-10 lg:py-8">
 	{#await data.health}
 		<div class="flex flex-col gap-5" role="status" aria-label="Loading service health">
 			{@render pageHeader(null)}

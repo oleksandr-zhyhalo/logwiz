@@ -34,7 +34,7 @@
 		<div class="mt-3 flex items-center gap-2">
 			<h1 class="text-h1">{user.name}</h1>
 			{#if user.role === 'admin'}
-				<span class="badge badge-sm badge-soft badge-neutral text-caption"> Admin </span>
+				<span class="badge badge-sm badge-soft badge-neutral text-xs"> Admin </span>
 			{/if}
 		</div>
 	</PageHeader>

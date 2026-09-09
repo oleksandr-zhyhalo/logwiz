@@ -125,7 +125,7 @@
 			<FieldPanel {store} />
 		</aside>
 
-		<div class="@container/explorer flex min-w-0 flex-1 flex-col overflow-hidden">
+		<div class="flex min-w-0 flex-1 flex-col overflow-hidden">
 			<SearchToolbar {store} />
 			<FilterChips {store} />
 
@@ -154,7 +154,7 @@
 								<span class="loading loading-spinner loading-sm"></span>
 								<div>
 									<p class="text-sm">Searching logs</p>
-									<p class="text-subtle text-caption">Fetching the latest results…</p>
+									<p class="text-subtle text-xs">Fetching the latest results…</p>
 								</div>
 							</div>
 						</div>
@@ -178,7 +178,7 @@
 									<SearchX class="h-5 w-5" aria-hidden="true" />
 								</div>
 								<h2 class="mt-4 text-base">No logs match this search</h2>
-								<p class="text-subtle text-caption mx-auto mt-1 max-w-xs leading-5">
+								<p class="text-subtle mx-auto mt-1 max-w-xs text-xs leading-5">
 									Try widening the time range or updating your query and filters.
 								</p>
 								{#if store.filters.length > 0}

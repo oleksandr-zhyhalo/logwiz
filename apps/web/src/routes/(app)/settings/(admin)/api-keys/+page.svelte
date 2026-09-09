@@ -110,7 +110,7 @@
 	<div class="mt-8 flex flex-wrap items-center gap-4">
 		<SearchInput bind:value={search} placeholder="Search API keys..." label="Search API keys" />
 
-		<span class="text-subtle text-caption tabular-nums">[{countLabel}]</span>
+		<span class="text-subtle text-xs tabular-nums">[{countLabel}]</span>
 
 		<button class="btn btn-primary btn-sm" onclick={() => (createOpen = true)} disabled={noIndexes}>
 			<Plus class="h-3.5 w-3.5" />
@@ -135,7 +135,7 @@
 						<div class="min-w-0">
 							<div class="text-base-content/70 truncate font-mono text-xs">{key.indexId}</div>
 						</div>
-						<div class="text-subtle text-caption">
+						<div class="text-subtle text-xs">
 							{key.lastUsedAt ? formatRelativeTime(key.lastUsedAt) : 'Never'}
 						</div>
 						<div class="flex justify-end gap-1">

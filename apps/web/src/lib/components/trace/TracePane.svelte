@@ -238,7 +238,7 @@
 				>
 					<ScrollText class="h-3.5 w-3.5" />
 					{#if logs.count !== null}
-						<span class="text-caption font-mono tabular-nums">{logs.count}</span>
+						<span class="font-mono text-xs tabular-nums">{logs.count}</span>
 					{/if}
 				</a>
 			{/if}

@@ -59,10 +59,10 @@
 					<span class="text-base-content/60 font-mono text-xs">
 						{key.start != null ? `${key.start}…` : '—'}
 					</span>
-					<span class="text-subtle text-caption">
+					<span class="text-subtle text-xs">
 						created {formatRelativeTime(key.createdAt)}
 					</span>
-					<span class="text-subtle text-caption">
+					<span class="text-subtle text-xs">
 						{key.lastRequest ? `used ${formatRelativeTime(key.lastRequest)}` : 'never used'}
 					</span>
 					<button

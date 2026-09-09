@@ -168,7 +168,7 @@
 			</div>
 		{/if}
 		{#if !columnar || series.length === 0}
-			<div class="text-muted text-caption flex h-80 items-center justify-center">
+			<div class="text-muted flex h-80 items-center justify-center text-xs">
 				{series.length === 0
 					? 'No indexes available.'
 					: 'No snapshots yet in this window — waiting for the next sweep.'}

@@ -12,7 +12,7 @@
 		<span class="text-lg font-semibold tracking-tight">Rootprint</span>
 	</a>
 	<div
-		class="border-base-300 bg-auth-card flex min-w-0 flex-col justify-center border p-5 sm:min-h-[480px] sm:p-7 [&_.alert]:rounded-none [&_.btn]:rounded-none [&_.input]:rounded-none [&_.select]:rounded-none"
+		class="border-base-300 bg-auth-card flex min-h-[480px] min-w-0 flex-col justify-center border p-7 [&_.alert]:rounded-none [&_.btn]:rounded-none [&_.input]:rounded-none [&_.select]:rounded-none"
 	>
 		{@render children()}
 	</div>

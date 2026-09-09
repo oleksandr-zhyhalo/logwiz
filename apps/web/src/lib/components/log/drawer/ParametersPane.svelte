@@ -93,7 +93,7 @@
 			class="border-line rounded-md border p-3 font-mono text-xs leading-relaxed break-words whitespace-pre-wrap"
 		>
 			{#if grouped.message === ''}
-				<span class="text-subtle text-caption font-sans">(no message)</span>
+				<span class="text-subtle font-sans text-xs">(no message)</span>
 			{:else}
 				{grouped.message}
 			{/if}
@@ -106,15 +106,15 @@
 			placeholder="Search properties…"
 			label="Search properties by key or value"
 		/>
-		<label class="text-muted text-caption flex shrink-0 cursor-pointer items-center gap-2">
+		<label class="text-muted flex shrink-0 cursor-pointer items-center gap-2 text-xs">
 			<input type="checkbox" class="checkbox checkbox-xs" bind:checked={showEmpty} />
 			Show empty values
 		</label>
-		<span class="text-subtle text-caption shrink-0 tabular-nums">{totalRows} fields</span>
+		<span class="text-subtle shrink-0 text-xs tabular-nums">{totalRows} fields</span>
 	</div>
 
 	{#if visibleGroups.length === 0}
-		<p class="text-muted text-caption p-6 text-center">
+		<p class="text-muted p-6 text-center text-xs">
 			{needle === '' ? 'No fields to display' : 'No matching fields'}
 		</p>
 	{:else}
@@ -134,8 +134,7 @@
 								<ChevronDown class="text-base-content/50 h-3 w-3" />
 							</span>
 							<p class="section-label">{group.label}</p>
-							<span
-								class="bg-base-300 text-muted text-caption rounded-sm px-1.5 py-0.5 tabular-nums"
+							<span class="bg-base-300 text-muted rounded-sm px-1.5 py-0.5 text-xs tabular-nums"
 								>{group.fields.length}</span
 							>
 						</button>

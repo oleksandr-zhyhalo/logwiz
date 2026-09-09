@@ -47,7 +47,7 @@
 	</span>
 
 	<div
-		class="text-subtle text-caption flex flex-wrap items-center gap-x-2.5 gap-y-1 {state ===
+		class="text-subtle flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs {state ===
 		'disconnected'
 			? 'opacity-50'
 			: ''}"

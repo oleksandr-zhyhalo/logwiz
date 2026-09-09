@@ -121,7 +121,7 @@
 		{/each}
 	</div>
 	{#if listEnd !== 'more'}
-		<div class="border-line text-muted text-caption sticky left-0 w-fit border-t px-3 py-4">
+		<div class="border-line text-muted sticky left-0 w-fit border-t px-3 py-4 text-xs">
 			{#if listEnd === 'capped'}
 				Showing the first 10,000 logs. Narrow the time range to see the rest.
 			{:else}

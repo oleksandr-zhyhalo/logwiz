@@ -108,7 +108,7 @@
 	<div class="flex w-72 flex-col p-3">
 		<p class="section-label mb-2">Absolute range</p>
 
-		<p class="text-muted text-caption mb-1">From</p>
+		<p class="text-muted mb-1 text-xs">From</p>
 		<div class="flex gap-2">
 			<input
 				type="date"
@@ -134,7 +134,7 @@
 			/>
 		</div>
 
-		<p class="text-muted text-caption mt-2 mb-1">To</p>
+		<p class="text-muted mt-2 mb-1 text-xs">To</p>
 		<div class="flex gap-2">
 			<input
 				type="date"

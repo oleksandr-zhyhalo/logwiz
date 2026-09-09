@@ -167,7 +167,7 @@
 {/snippet}
 
 {#snippet empty(message: string)}
-	<p class="text-subtle text-caption">{message}</p>
+	<p class="text-subtle text-xs">{message}</p>
 {/snippet}
 
 <div class="flex h-full min-h-0 flex-col">
@@ -180,7 +180,7 @@
 				></span>
 				<span class="truncate">{span.serviceName}</span>
 				{#if span.isError}
-					<span class="text-error text-caption shrink-0">Failed</span>
+					<span class="text-error shrink-0 text-xs">Failed</span>
 				{/if}
 			</div>
 			<h2 class="mt-1 truncate font-mono text-base leading-5" title={span.name}>{span.name}</h2>
@@ -293,7 +293,7 @@
 					<h3 class="section-label mb-2">Timing</h3>
 					<div class="border-line overflow-hidden rounded-md border">
 						<div class="p-3">
-							<p class="text-subtle text-caption">Total duration</p>
+							<p class="text-subtle text-xs">Total duration</p>
 							<p class="mt-0.5 font-mono text-xl leading-6 tabular-nums">{durationText}</p>
 
 							<div
@@ -307,7 +307,7 @@
 
 							<dl class="mt-2 grid grid-cols-2 gap-3">
 								<div>
-									<dt class="text-caption flex items-center gap-1.5">
+									<dt class="flex items-center gap-1.5 text-xs">
 										<span class="bg-base-content h-1.5 w-1.5 shrink-0 rounded-full"></span>
 										Self time
 									</dt>
@@ -319,7 +319,7 @@
 									</dd>
 								</div>
 								<div>
-									<dt class="text-caption flex items-center gap-1.5">
+									<dt class="flex items-center gap-1.5 text-xs">
 										<span class="bg-base-content/20 h-1.5 w-1.5 shrink-0 rounded-full"></span>
 										Child spans
 									</dt>
@@ -338,13 +338,13 @@
 						>
 							<div class="min-w-0 px-3 py-2.5">
 								<dt class="section-label">Started</dt>
-								<dd class="text-caption mt-0.5 truncate font-mono tabular-nums" title={startText}>
+								<dd class="mt-0.5 truncate font-mono text-xs tabular-nums" title={startText}>
 									{formatSpanStart(traceStartMicros + span.startOffsetMicros)}
 								</dd>
 							</div>
 							<div class="px-3 py-2.5">
 								<dt class="section-label">Trace offset</dt>
-								<dd class="text-caption mt-0.5 font-mono tabular-nums">
+								<dd class="mt-0.5 font-mono text-xs tabular-nums">
 									{formatOffset(span.startOffsetMicros)}
 								</dd>
 							</div>
@@ -373,7 +373,7 @@
 								>
 									<span class="bg-warning block h-full" style={`width:${dbBarPct}%`}></span>
 								</div>
-								<p class="text-subtle text-caption mt-1">
+								<p class="text-subtle mt-1 text-xs">
 									Cumulative span time; concurrent work may overlap
 								</p>
 							</div>
@@ -403,10 +403,10 @@
 											class="h-1.5 w-1.5 shrink-0 rounded-full"
 											style={`background-color:${serviceColor(rollup.serviceName)}`}
 										></span>
-										<span class="text-subtle text-caption min-w-0 truncate">
+										<span class="text-subtle min-w-0 truncate text-xs">
 											{rollup.serviceName}
 										</span>
-										<span class="text-subtle text-caption shrink-0 tabular-nums">
+										<span class="text-subtle shrink-0 text-xs tabular-nums">
 											×{rollup.count}
 										</span>
 									</span>
@@ -466,7 +466,7 @@
 												{/if}
 											</div>
 											<time
-												class="bg-base-200 text-caption shrink-0 rounded px-1.5 font-mono tabular-nums"
+												class="bg-base-200 shrink-0 rounded px-1.5 font-mono text-xs tabular-nums"
 											>
 												{formatOffset(event.timeOffsetMicros - span.startOffsetMicros)}
 											</time>
@@ -476,7 +476,7 @@
 											<div class="border-line border-t px-3 py-2.5">
 												<div class="mb-1.5 flex items-baseline justify-between gap-3">
 													<p class="section-label">Attributes</p>
-													<p class="text-subtle text-caption tabular-nums">
+													<p class="text-subtle text-xs tabular-nums">
 														{pluralize(fields.length, 'field')}
 													</p>
 												</div>
@@ -488,7 +488,7 @@
 											<div class="border-line border-t px-3 py-2.5">
 												<p class="section-label mb-1.5">Stack trace</p>
 												<pre
-													class="bg-base-200 text-base-content/70 text-caption max-h-80 overflow-auto rounded p-2 font-mono whitespace-pre">{stacktrace}</pre>
+													class="bg-base-200 text-base-content/70 max-h-80 overflow-auto rounded p-2 font-mono text-xs whitespace-pre">{stacktrace}</pre>
 											</div>
 										{/if}
 									</article>

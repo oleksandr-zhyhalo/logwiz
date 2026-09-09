@@ -21,7 +21,7 @@
 </script>
 
 <div
-	class="border-line bg-base-100 text-muted text-caption flex items-center gap-1.5 border-b px-3 py-1.5 tabular-nums"
+	class="border-line bg-base-100 text-muted flex items-center gap-1.5 border-b px-3 py-1.5 text-xs tabular-nums"
 >
 	<span class="loading loading-spinner loading-xs {counting ? '' : 'invisible'}"></span>
 	<span class={numClass}>{store.numHits?.toLocaleString() ?? '—'}</span>

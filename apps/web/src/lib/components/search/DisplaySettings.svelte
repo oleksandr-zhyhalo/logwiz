@@ -155,7 +155,7 @@
 					</button>
 				{/each}
 				{#if availableFields.length === 0}
-					<p class="text-subtle text-caption px-2 py-2">
+					<p class="text-subtle px-2 py-2 text-xs">
 						{searchTerm.trim() ? 'No matching fields' : 'All fields added'}
 					</p>
 				{/if}

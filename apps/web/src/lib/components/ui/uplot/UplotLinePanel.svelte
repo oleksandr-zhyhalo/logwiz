@@ -156,7 +156,7 @@
 			<div>
 				<h2 class="section-label">{title}</h2>
 				{#if description}
-					<p class="text-subtle text-caption mt-1">{description}</p>
+					<p class="text-subtle mt-1 text-xs">{description}</p>
 				{/if}
 			</div>
 			{#if summary}
@@ -165,10 +165,7 @@
 		</div>
 	</header>
 	{#if !data}
-		<div
-			class="text-subtle text-caption flex items-center justify-center"
-			style="height: {height}px"
-		>
+		<div class="text-subtle flex items-center justify-center text-xs" style="height: {height}px">
 			{emptyMessage}
 		</div>
 	{:else}

@@ -195,8 +195,8 @@
 			class="text-base-content/70 hover:text-base-content flex cursor-pointer items-center justify-between text-xs"
 		>
 			<span class="section-label">Raw metrics</span>
-			<span class="text-muted text-caption group-open:hidden">expand</span>
-			<span class="text-muted text-caption hidden group-open:inline">collapse</span>
+			<span class="text-muted text-xs group-open:hidden">expand</span>
+			<span class="text-muted hidden text-xs group-open:inline">collapse</span>
 		</summary>
 		<div class="mt-4 flex flex-col gap-3">
 			<div class="flex items-center gap-3">
@@ -228,7 +228,7 @@
 					Raw metrics unavailable: {rawError}
 				</div>
 			{:else if rawLoading && rawText === null}
-				<div class="text-muted text-caption px-4 py-6 text-center">Loading raw metrics…</div>
+				<div class="text-muted px-4 py-6 text-center text-xs">Loading raw metrics…</div>
 			{:else if rawText !== null}
 				<pre
 					class="border-line rounded-box max-h-[60vh] overflow-auto border p-4 font-mono text-xs leading-relaxed">{filteredRaw(

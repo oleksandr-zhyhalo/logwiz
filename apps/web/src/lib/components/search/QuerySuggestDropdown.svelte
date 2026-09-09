@@ -57,7 +57,7 @@
 						{/if}
 						<span class="min-w-0 flex-1 truncate text-left">{item.label}</span>
 						{#if item.detail !== null}
-							<span class="text-subtle text-caption shrink-0">{item.detail}</span>
+							<span class="text-subtle shrink-0 text-xs">{item.detail}</span>
 						{/if}
 					</button>
 				</li>

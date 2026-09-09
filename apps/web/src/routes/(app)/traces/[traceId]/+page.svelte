@@ -134,7 +134,7 @@
 			</div>
 		</div>
 
-		<div class="mt-3 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+		<div class="mt-3 flex min-w-0 items-end justify-between gap-3">
 			<div class="min-w-0">
 				<p class="eyebrow">Operation</p>
 				<div class="mt-0.5 flex min-w-0 items-baseline gap-3">
@@ -149,11 +149,11 @@
 				</div>
 			</div>
 
-			<div class="min-w-0 sm:max-w-[min(48vw,36rem)] sm:text-right">
+			<div class="max-w-[min(48vw,36rem)] min-w-0 text-right">
 				<p class="section-label">Trace ID</p>
 				<CopyButton
 					text={data.traceId}
-					class="text-subtle hover:text-base-content mt-0.5 flex w-full min-w-0 items-center gap-1.5 sm:justify-end"
+					class="text-subtle hover:text-base-content mt-0.5 flex w-full min-w-0 items-center justify-end gap-1.5"
 					ariaLabel="Copy trace ID"
 				>
 					{#snippet children({ copied }: { copied: boolean })}
@@ -172,7 +172,7 @@
 			<div
 				class="border-line mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t pt-2 text-xs"
 			>
-				<span class="text-muted text-caption mr-1">Services</span>
+				<span class="text-muted mr-1 text-xs">Services</span>
 				{#each model.services as service (service.name)}
 					<span class="flex min-w-0 items-center gap-1.5">
 						<span
@@ -183,7 +183,7 @@
 						<span class="text-subtle tabular-nums">{service.count}</span>
 					</span>
 				{/each}
-				<span class="bg-line hidden h-3 w-px sm:block"></span>
+				<span class="bg-line h-3 w-px"></span>
 				<span class="text-base-content/60 font-mono tabular-nums">
 					{model.spanCount} span{model.spanCount === 1 ? '' : 's'}
 				</span>

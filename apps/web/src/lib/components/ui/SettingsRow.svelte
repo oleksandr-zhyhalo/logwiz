@@ -22,25 +22,21 @@
 	const describedBy = $derived(error ? msgId : undefined);
 </script>
 
-<div class="@container/settings-row min-w-0">
-	<div
-		class="grid grid-cols-1 gap-3 px-4 py-4 @min-[44rem]/settings-row:grid-cols-[260px_minmax(0,1fr)] @min-[44rem]/settings-row:gap-6"
-	>
-		<div>
-			{#if plain}
-				<span class="text-sm">{label}</span>
-			{:else}
-				<label for={controlId} class="text-sm">{label}</label>
-			{/if}
-			{#if hint}
-				<div class="text-muted mt-0.5 text-xs">{hint}</div>
-			{/if}
-		</div>
-		<div class="flex min-w-0 flex-col gap-1">
-			{@render children({ id: controlId, invalid: !!error, describedBy })}
-			{#if error}
-				<p id={msgId} class="text-error text-xs">{error}</p>
-			{/if}
-		</div>
+<div class="grid grid-cols-[260px_minmax(0,1fr)] gap-6 px-4 py-4">
+	<div>
+		{#if plain}
+			<span class="text-sm">{label}</span>
+		{:else}
+			<label for={controlId} class="text-sm">{label}</label>
+		{/if}
+		{#if hint}
+			<div class="text-muted mt-0.5 text-xs">{hint}</div>
+		{/if}
+	</div>
+	<div class="flex min-w-0 flex-col gap-1">
+		{@render children({ id: controlId, invalid: !!error, describedBy })}
+		{#if error}
+			<p id={msgId} class="text-error text-xs">{error}</p>
+		{/if}
 	</div>
 </div>

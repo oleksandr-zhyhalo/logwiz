@@ -236,9 +236,7 @@
 								<span class="loading loading-spinner loading-xs"></span>
 							</div>
 						{:else if l.noMoreAfter}
-							<p
-								class="border-line text-subtle text-caption border-b border-dashed py-2 text-center"
-							>
+							<p class="border-line text-subtle border-b border-dashed py-2 text-center text-xs">
 								No newer logs
 							</p>
 						{/if}
@@ -263,9 +261,7 @@
 								<span class="loading loading-spinner loading-xs"></span>
 							</div>
 						{:else if l.noMoreBefore}
-							<p
-								class="border-line text-subtle text-caption border-t border-dashed py-2 text-center"
-							>
+							<p class="border-line text-subtle border-t border-dashed py-2 text-center text-xs">
 								No older logs
 							</p>
 						{/if}

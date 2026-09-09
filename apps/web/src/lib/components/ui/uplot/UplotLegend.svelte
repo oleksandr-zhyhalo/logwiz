@@ -8,7 +8,7 @@
 	{#each items as item, i (item.key)}
 		<button
 			type="button"
-			class="text-muted text-caption flex items-center gap-1.5"
+			class="text-muted flex items-center gap-1.5 text-xs"
 			class:line-through={!item.visible}
 			aria-pressed={item.visible}
 			onclick={() => onToggle(i)}

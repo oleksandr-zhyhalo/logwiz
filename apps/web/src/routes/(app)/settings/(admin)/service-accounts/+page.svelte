@@ -96,8 +96,8 @@
 				{#each serviceAccounts as sa (sa.id)}
 					<div class="{row} min-h-14 py-3">
 						<div class="truncate text-sm">{sa.name}</div>
-						<div class="text-muted text-caption tabular-nums">{pluralize(sa.keyCount, 'key')}</div>
-						<div class="text-subtle text-caption">{formatRelativeTime(sa.createdAt)}</div>
+						<div class="text-muted text-xs tabular-nums">{pluralize(sa.keyCount, 'key')}</div>
+						<div class="text-subtle text-xs">{formatRelativeTime(sa.createdAt)}</div>
 						<div class="flex justify-end">
 							<button
 								type="button"
@@ -147,7 +147,7 @@
 						<div class="text-base-content/60 font-mono text-xs">
 							{key.start != null ? `${key.start}…` : '—'}
 						</div>
-						<div class="text-subtle text-caption">
+						<div class="text-subtle text-xs">
 							{key.lastRequest ? formatRelativeTime(key.lastRequest) : 'Never'}
 						</div>
 						<div class="flex justify-end">

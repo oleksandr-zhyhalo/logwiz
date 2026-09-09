@@ -136,7 +136,7 @@
 <Modal bind:open title="Export Logs">
 	<div class="flex flex-col gap-3">
 		<div>
-			<div class="text-muted text-caption mb-1">Format</div>
+			<div class="text-muted mb-1 text-xs">Format</div>
 			<div class="join w-full">
 				{#each FORMATS as opt (opt.value)}
 					<button
