@@ -23,7 +23,12 @@ import { normalizeHit } from '$lib/utils/normalize-hit';
 import { readLastIndex, writeLastIndex, clearLastIndex } from '$lib/utils/last-index';
 import { resolveWindow } from '$lib/utils/time-range';
 import { UNKNOWN_LEVEL } from '$lib/constants/level-colors';
-import { displayNameFor, extractJsonSubFields, serializeTimeRange } from '$lib/utils/fields';
+import {
+	countFieldPaths,
+	displayNameFor,
+	serializeTimeRange,
+	type FieldSample
+} from '$lib/utils/fields';
 import { RequestGuard } from '$lib/stores/request-guard';
 import { isAbortError } from '$lib/api/errors';
 import type { DisplayMode, Preferences } from 'api/types';
@@ -60,34 +65,49 @@ export class SearchStore {
 	histogramError = $state<string | null>(null);
 
 	#schemaFields = $state.raw<LogField[]>([]);
-	#discoveredPaths = $state<Set<string>>(new Set());
+	#sample = $state.raw<FieldSample>({ counts: new Map(), total: 0 });
 
+	/**
+	 * How much of the current search's first page carries each field path. `_field_caps` answers per
+	 * split and never sees the query, so this is the panel's only query-aware signal: it ranks the
+	 * sections and gates which json leaves earn a row.
+	 */
+	get fieldSample(): FieldSample {
+		return this.#sample;
+	}
+
+	// The json parents stay out of the list: `_field_caps` reports their leaves as entries of their
+	// own. The hits fill the gap for a leaf too fresh to be in a published split.
 	fields = $derived.by<LogField[]>(() => {
+		const listed = this.#schemaFields.filter((f) => f.type !== 'json');
 		const cfg = this.fieldConfig;
-		const jsonNames = new Set(
-			this.#schemaFields.filter((f) => f.type === 'json').map((f) => f.name)
-		);
-		const hiddenPaths = new Set<string>(
-			cfg ? [cfg.timestampField, cfg.messageField, cfg.levelField] : []
-		);
-		const isOtel = cfg?.isOtel ?? false;
-		const out: LogField[] = [];
-		for (const f of this.#schemaFields) {
-			if (jsonNames.has(f.name)) continue;
-			out.push(f);
+		if (cfg === null) return listed;
+		const known = new Set([
+			...this.#schemaFields.map((f) => f.name),
+			cfg.timestampField,
+			cfg.messageField,
+			cfg.levelField
+		]);
+		// Leaves under a surviving json parent only: anything else the list omits is not a fast field.
+		const jsonPrefixes = this.#schemaFields
+			.filter((f) => f.type === 'json')
+			.map((f) => `${f.name}.`);
+		const extra: LogField[] = [];
+		for (const name of this.#sample.counts.keys()) {
+			if (known.has(name)) continue;
+			if (!jsonPrefixes.some((p) => name.startsWith(p))) continue;
+			extra.push({ name, displayName: displayNameFor(name, cfg.isOtel), type: 'text' });
 		}
-		for (const path of this.#discoveredPaths) {
-			if (hiddenPaths.has(path)) continue;
-			out.push({
-				name: path,
-				displayName: displayNameFor(path, isOtel),
-				type: 'text'
-			});
-		}
-		return out;
+		return [...listed, ...extra];
 	});
 	fieldsLoading = $state(false);
 	fieldsError = $state<string | null>(null);
+	#fieldsLoadedFor = $state<string | null>(null);
+	// The key match already implies a selected index and a loaded config: both are nulled with it.
+	fieldsReady = $derived(
+		!this.fieldsLoading &&
+			this.#fieldsLoadedFor === `${this.selectedIndex}|${serializeTimeRange(this.timeRange)}`
+	);
 
 	columnFields = $derived.by<LogField[]>(() => {
 		const cfg = this.fieldConfig;
@@ -288,6 +308,8 @@ export class SearchStore {
 		this.numHits = null;
 		this.elapsedTimeMicros = 0;
 		this.rawHits = [];
+		// Counts belong to the index that produced them; kept, they would rank the next index's fields.
+		this.#countPaths([]);
 		this.#lastBatchFull = false;
 		this.#snapshotStartTs = undefined;
 		this.#snapshotEndTs = undefined;
@@ -347,13 +369,14 @@ export class SearchStore {
 			writeLastIndex(active);
 		});
 
-		// Separate effect: fields depend on fieldConfig + selectedIndex, not on query/time.
+		// Keyed by the serialized range, never by resolved seconds — a relative preset resolves to a
+		// new `now` on every read and would never settle.
 		$effect(() => {
 			const active = this.selectedIndex;
 			const cfg = this.fieldConfig;
 			if (active === null || cfg === null) return;
 
-			const key = `${active}|${cfg.isOtel ? '1' : '0'}|${cfg.timestampField}|${cfg.messageField}`;
+			const key = `${active}|${cfg.isOtel ? '1' : '0'}|${cfg.timestampField}|${cfg.messageField}|${serializeTimeRange(this.timeRange)}`;
 			if (key === this.#fieldsFetchedFor) return;
 			this.#fieldsFetchedFor = key;
 			this.#loadFields(active, cfg);
@@ -422,13 +445,14 @@ export class SearchStore {
 				this.elapsedTimeMicros = result.elapsedTimeMicros;
 			}
 
-			this.#discoverFields(result.rawHits, { reset: !append });
+			if (!append) this.#countPaths(result.rawHits);
 		} catch (e) {
 			if (isAbortError(e)) return;
 			if (!this.#searchGuard.isCurrent(requestId)) return;
 			if (append) return;
 			this.searchError = e instanceof Error ? e.message : 'Search failed';
 			this.rawHits = [];
+			this.#countPaths([]);
 			this.elapsedTimeMicros = 0;
 			this.#lastBatchFull = false;
 		} finally {
@@ -516,6 +540,9 @@ export class SearchStore {
 		const requestId = this.#configGuard.next();
 		this.fieldConfig = null;
 		this.#fieldsFetchedFor = null;
+		this.#fieldsLoadedFor = null;
+		this.#fieldsGuard.next();
+		this.fieldsLoading = false;
 		this.configError = null;
 		try {
 			const cfg = await getIndexConfig(indexId);
@@ -540,36 +567,25 @@ export class SearchStore {
 		this.#loadFields(indexId, cfg);
 	}
 
-	#discoverFields(hits: Record<string, unknown>[], opts: { reset: boolean }): void {
-		const jsonNames = this.#schemaFields.filter((f) => f.type === 'json').map((f) => f.name);
-		if (jsonNames.length === 0) {
-			if (opts.reset) this.#discoveredPaths = new Set();
-			return;
-		}
+	/** One fixed slice — the first page. Accumulating across scroll pages would reorder the panel. */
+	#countPaths(hits: Record<string, unknown>[]): void {
 		try {
-			const found = extractJsonSubFields(hits, jsonNames);
-			if (opts.reset) {
-				this.#discoveredPaths = found;
-			} else {
-				const next = new Set(this.#discoveredPaths);
-				for (const p of found) next.add(p);
-				this.#discoveredPaths = next;
-			}
+			this.#sample = countFieldPaths(hits);
 		} catch (e) {
-			console.warn('[search] JSON sub-field discovery failed', e);
+			console.warn('[search] field-path sampling failed', e);
 		}
 	}
 
 	async #loadFields(indexId: string, fieldConfig: FieldConfig): Promise<void> {
 		const requestId = this.#fieldsGuard.next();
+		const loadedFor = `${indexId}|${serializeTimeRange(this.timeRange)}`;
 		this.fieldsLoading = true;
 		this.fieldsError = null;
-		this.#discoveredPaths = new Set();
 		try {
-			const fields = await loadFields(indexId, fieldConfig);
+			const fields = await loadFields(indexId, fieldConfig, resolveWindow(this.timeRange));
 			if (!this.#fieldsGuard.isCurrent(requestId)) return;
 			this.#schemaFields = fields;
-			this.#discoverFields(this.rawHits, { reset: true });
+			this.#fieldsLoadedFor = loadedFor;
 		} catch (e) {
 			if (!this.#fieldsGuard.isCurrent(requestId)) return;
 			this.fieldsError = e instanceof Error ? e.message : 'Failed to load fields';

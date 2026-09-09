@@ -14469,6 +14469,26 @@
 							"minLength": 1,
 							"type": "string"
 						}
+					},
+					{
+						"description": "Unix timestamp in seconds",
+						"in": "query",
+						"name": "startTs",
+						"required": true,
+						"schema": {
+							"minimum": 0,
+							"type": "number"
+						}
+					},
+					{
+						"description": "Unix timestamp in seconds",
+						"in": "query",
+						"name": "endTs",
+						"required": true,
+						"schema": {
+							"minimum": 0,
+							"type": "number"
+						}
 					}
 				],
 				"responses": {

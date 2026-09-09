@@ -21,15 +21,21 @@ function isTruncated(agg: BucketAggregationResult | undefined): boolean {
 	return (agg?.sum_other_doc_count ?? 0) > 0;
 }
 
-/** Maps terms-aggregation buckets to field-value entries, dropping empty-string keys. */
+/**
+ * Terms buckets to field-value entries, dropping empty-string keys; a path stored as both number
+ * and string buckets twice under one key, so counts merge. `key_as_string` because these go back
+ * out as query terms and a bool buckets as `key: 1` with `key_as_string: "true"`.
+ */
 function bucketsToEntries(agg: BucketAggregationResult | undefined): FieldValueEntry[] {
-	const totals = new Map<string, number>();
+	const counts = new Map<string, number>();
 	for (const b of asBuckets(agg)) {
-		const value = String(b.key);
+		const value = b.key_as_string ?? String(b.key);
 		if (value === '') continue;
-		totals.set(value, (totals.get(value) ?? 0) + b.doc_count);
+		counts.set(value, (counts.get(value) ?? 0) + b.doc_count);
 	}
-	return [...totals].map(([value, count]) => ({ value, count }));
+	return [...counts]
+		.map(([value, count]) => ({ value, count }))
+		.toSorted((a, b) => b.count - a.count);
 }
 
 type HistogramParams = {
