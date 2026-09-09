@@ -16,6 +16,8 @@
 	import { fetchFieldValuesBulk } from '$lib/api/field-values';
 	import { escapeFilterValue } from 'api/query';
 
+	const SUGGEST_LIMIT = 50;
+
 	let { store }: { store: SearchStore } = $props();
 
 	let queryInput = $state(store.query);
@@ -102,24 +104,44 @@
 		};
 	});
 
-	const suggestions = $derived.by<QuerySuggestion[]>(() => {
+	function prefixFirst(items: QuerySuggestion[], q: string): QuerySuggestion[] {
+		if (q === '') return items;
+		const head: QuerySuggestion[] = [];
+		const tail: QuerySuggestion[] = [];
+		for (const s of items) {
+			const hit = s.label.toLowerCase().startsWith(q) || s.insert.toLowerCase().startsWith(q);
+			(hit ? head : tail).push(s);
+		}
+		return [...head, ...tail];
+	}
+
+	const matched = $derived.by<QuerySuggestion[]>(() => {
 		const t = token;
 		if (t === null || dismissed) return [];
 		const q = t.prefix.toLowerCase();
 		if (t.kind === 'field') {
-			return store.fields
+			const fields = store.fields
 				.filter((f) => f.name.toLowerCase().includes(q) || f.displayName.toLowerCase().includes(q))
 				.map((f) => ({
 					label: f.displayName,
 					detail: f.name === f.displayName ? f.type : f.name,
 					insert: f.name
 				}));
+			return prefixFirst(fields, q);
 		}
 		if (valueState === null || valueState.key !== valueFetchKey) return [];
-		return valueState.buckets
+		const values = valueState.buckets
 			.filter((b) => b.value.toLowerCase().includes(q))
 			.map((b) => ({ label: b.value, detail: b.count.toLocaleString(), insert: b.value }));
+		return prefixFirst(values, q);
 	});
+
+	const suggestions = $derived(matched.slice(0, SUGGEST_LIMIT));
+	const hiddenCount = $derived(matched.length - suggestions.length);
+	const suggestOpen = $derived(token !== null && !dismissed);
+	const valuesPending = $derived(
+		token?.kind === 'value' && (valueState === null || valueState.key !== valueFetchKey)
+	);
 
 	async function accept(i: number) {
 		const t = token;
@@ -151,7 +173,7 @@
 			void accept(highlight);
 		} else if (e.key === 'Enter') {
 			if (!openedTrace()) commitQuery();
-		} else if (e.key === 'Escape' && open) {
+		} else if (e.key === 'Escape' && suggestOpen) {
 			e.stopPropagation();
 			dismissed = true;
 		}
@@ -220,10 +242,12 @@
 			onkeyup={refreshToken}
 			onkeydown={handleKeydown}
 		/>
-		{#if suggestions.length > 0}
+		{#if suggestOpen}
 			<QuerySuggestDropdown
 				items={suggestions}
 				kind={token?.kind ?? 'field'}
+				hidden={hiddenCount}
+				pending={valuesPending}
 				{highlight}
 				onPick={(i) => void accept(i)}
 			/>
