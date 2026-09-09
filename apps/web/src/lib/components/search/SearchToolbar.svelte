@@ -183,11 +183,11 @@
 	}
 </script>
 
-<div class="border-line bg-base-100 flex h-12 items-center gap-2 border-b px-3">
+<div class="border-line bg-base-100 flex h-12 shrink-0 items-center gap-2 border-b px-3">
 	<ViewsDropdown {store} />
 
 	<select
-		class="select select-sm w-auto min-w-0 font-mono text-xs"
+		class="select select-sm text-ui w-auto max-w-36 min-w-0"
 		aria-label="Index"
 		value={store.selectedIndex}
 		onchange={(e) => store.handleIndexChange((e.currentTarget as HTMLSelectElement).value)}
@@ -200,7 +200,8 @@
 	<div class="relative min-w-0 flex-1">
 		<input
 			type="text"
-			class="input input-sm w-full font-mono"
+			class="input input-sm w-full font-mono text-xs placeholder:font-sans"
+			aria-label="Search logs"
 			placeholder="Search logs… (or paste a trace ID)"
 			title={'Search logs with a Quickwit query. A bare 32-character hex trace ID opens that trace instead — wrap it in quotes to search for it as text.'}
 			bind:this={inputEl}

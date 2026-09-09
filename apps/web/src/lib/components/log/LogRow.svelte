@@ -45,12 +45,12 @@
 	{@attach rowActivate(() => onActivate)}
 >
 	<span
-		aria-hidden="true"
-		title={hit.level.toUpperCase()}
+		title={hit.level.trim().toUpperCase() || 'UNKNOWN'}
 		class="my-[1px]"
 		style="background-color: var(--level-color);"
-	></span>
-	<span class="text-base-content/60 px-2 py-1" title={hit.timestamp}>
+		><span class="sr-only">Severity: {hit.level.trim() || 'unknown'}. </span></span
+	>
+	<span class="text-muted px-2 py-1" title={hit.timestamp}>
 		{formatLogRowTimestamp(hit.timestamp)}
 	</span>
 	{#each columns as column (column)}

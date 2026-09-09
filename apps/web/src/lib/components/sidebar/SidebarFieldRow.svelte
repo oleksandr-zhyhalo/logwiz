@@ -119,14 +119,14 @@
 			{field.displayName}
 		</span>
 		{#if countLabel}
-			<span class="text-base-content/40 text-[10px] leading-4">{countLabel}</span>
+			<span class="text-subtle text-xs">{countLabel}</span>
 		{/if}
 	</button>
 
 	{#if open}
 		<div class="pb-3 {indented ? 'pr-3 pl-6' : 'px-3'}">
 			{#if loading && resolvedValues.length === 0}
-				<div class="text-base-content/50 flex items-center gap-2 py-1 text-xs">
+				<div class="text-subtle flex items-center gap-2 py-1 text-xs">
 					<span class="loading loading-spinner loading-xs"></span>
 					Loading…
 				</div>
@@ -144,7 +144,7 @@
 				{/if}
 
 				{#if pinnedVisible.length === 0 && unpinnedVisible.length === 0}
-					<p class="text-base-content/50 py-1 text-xs">
+					<p class="text-subtle py-1 text-xs">
 						{normalizedValueSearch ? 'No matching values' : 'No values found'}
 					</p>
 				{:else}
@@ -192,7 +192,7 @@
 								{bucket.value}
 							</button>
 							<span
-								class="text-base-content/50 shrink-0 text-right text-[10px] tabular-nums transition-opacity duration-150 group-focus-within:opacity-0 group-hover:opacity-0"
+								class="text-subtle shrink-0 text-right font-sans text-xs tabular-nums transition-opacity duration-150 group-focus-within:opacity-0 group-hover:opacity-0"
 							>
 								{isGhost || isExcluded ? '—' : bucket.count.toLocaleString()}
 							</span>

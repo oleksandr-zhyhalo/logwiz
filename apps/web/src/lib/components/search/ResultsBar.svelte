@@ -10,7 +10,7 @@
 
 	const durationMs = $derived(Math.round(store.elapsedTimeMicros / 1000));
 	const counting = $derived(store.loading === 'fresh' || store.histogramLoading);
-	const numClass = $derived(counting ? 'text-base-content/40' : 'text-base-content/80');
+	const numClass = $derived(counting ? 'text-subtle' : 'text-base-content');
 	const exportDisabled = $derived(
 		store.loading !== 'idle' ||
 			store.numHits === 0 ||
@@ -21,17 +21,16 @@
 </script>
 
 <div
-	class="border-base-content/10 bg-base-100 text-base-content/50 flex items-center gap-1.5 border-b px-3 py-1.5 text-[12px] tracking-wider uppercase"
+	class="border-line bg-base-100 text-muted flex items-center gap-1.5 border-b px-3 py-1.5 text-xs tabular-nums"
 >
 	<span class="loading loading-spinner loading-xs {counting ? '' : 'invisible'}"></span>
 	<span class={numClass}>{store.numHits?.toLocaleString() ?? '—'}</span>
 	<span>logs found</span>
 	{#if store.hasSearched && store.elapsedTimeMicros > 0}
-		<span class="text-base-content/30">·</span>
+		<span>in</span>
 		<span class={numClass}>{durationMs}</span>
 		<span>ms</span>
 	{/if}
-
 	<div class="ml-auto flex items-center gap-1">
 		<button
 			type="button"
