@@ -542,6 +542,7 @@ export class SearchStore {
 		this.#fieldsFetchedFor = null;
 		this.#fieldsLoadedFor = null;
 		this.#fieldsGuard.next();
+		this.fieldsLoading = false;
 		this.configError = null;
 		try {
 			const cfg = await getIndexConfig(indexId);

@@ -36,27 +36,26 @@ export async function fetchFieldCaps(
 		`/api/v1/_elastic/${encodeURIComponent(indexId)}/_field_caps?${params.toString()}`
 	);
 
-	let body: FieldCapsBody;
 	try {
 		const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
 		if (!res.ok) throw new Error(`HTTP ${res.status}`);
-		body = (await res.json()) as FieldCapsBody;
+		const body = (await res.json()) as FieldCapsBody;
+
+		const byName = new Map<string, IndexField>();
+		for (const [rawName, caps] of Object.entries(body.fields ?? {})) {
+			const type = pickType(caps);
+			if (type === null) continue;
+			const name = rawName.startsWith(DYNAMIC_PREFIX)
+				? rawName.slice(DYNAMIC_PREFIX.length)
+				: rawName;
+			if (name === '' || byName.has(name)) continue;
+			// `aggregatable` is the only fast-field signal _field_caps offers.
+			byName.set(name, { name, type, fast: true, description: null });
+		}
+
+		return [...byName.values()];
 	} catch (err) {
 		logger.warn({ err, indexId, url }, 'field caps failed — falling back to schema');
 		return null;
 	}
-
-	const byName = new Map<string, IndexField>();
-	for (const [rawName, caps] of Object.entries(body.fields ?? {})) {
-		const type = pickType(caps);
-		if (type === null) continue;
-		const name = rawName.startsWith(DYNAMIC_PREFIX)
-			? rawName.slice(DYNAMIC_PREFIX.length)
-			: rawName;
-		if (name === '' || byName.has(name)) continue;
-		// `aggregatable` is the only fast-field signal _field_caps offers.
-		byName.set(name, { name, type, fast: true, description: null });
-	}
-
-	return [...byName.values()];
 }

@@ -206,7 +206,13 @@ export async function listIndexFields(
 	if (caps === null) return { fields: meta.index.fields };
 
 	const known = new Set(meta.index.fields.map((f) => f.name));
-	return { fields: [...meta.index.fields, ...caps.filter((f) => !known.has(f.name))] };
+	const aggregatable = new Set(caps.map((f) => f.name));
+	return {
+		fields: [
+			...meta.index.fields.map((f) => (aggregatable.has(f.name) ? { ...f, fast: true } : f)),
+			...caps.filter((f) => !known.has(f.name))
+		]
+	};
 }
 
 export async function deleteIndex(db: Db, qw: QuickwitClient, indexId: string): Promise<void> {

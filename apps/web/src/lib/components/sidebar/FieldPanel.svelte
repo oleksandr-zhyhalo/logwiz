@@ -294,7 +294,8 @@
 			scrollMargin: margin,
 			getScrollElement: () => el,
 			estimateSize: () => ROW_ESTIMATE,
-			getItemKey: (index) => list[index]?.key ?? index
+			getItemKey: (index) => list[index]?.key ?? index,
+			overscan: OVERSCAN
 		});
 	});
 
