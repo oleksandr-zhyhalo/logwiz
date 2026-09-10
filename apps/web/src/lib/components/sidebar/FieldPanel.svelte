@@ -114,37 +114,33 @@
 		return `${id}|${store.query}|${serializeTimeRange(store.timeRange)}|${filtersKey}`;
 	}
 
+	const knownFieldNames = $derived(new Set(store.fields.map((f) => f.name)));
+
+	const eligibleOpen = $derived([...openFields].filter((f) => knownFieldNames.has(f)).toSorted());
+
 	// Trigger includes all filters so any change re-runs; per-field cache decides which rows fetch.
 	const triggerKey = $derived.by(() => {
 		const id = store.selectedIndex;
 		if (!id) return null;
 		const filtersKey = store.filters.map(filterKey).join(',');
-		const openKey = [...openFields].toSorted().join(',');
+		const openKey = eligibleOpen.join(',');
 		return `${id}|${store.query}|${serializeTimeRange(store.timeRange)}|${filtersKey}|${openKey}`;
 	});
-
-	// Discovery is the whole rule: a field it does not list has no row, so it cannot be open.
-	const knownFieldNames = $derived(new Set(store.fields.map((f) => f.name)));
 
 	function runOrchestrator(signal: AbortSignal) {
 		const id = store.selectedIndex;
 		if (!id || !store.fieldsReady) return;
 
-		// Only prune against completed discovery for this index/range, never a stale inventory.
-		const known = knownFieldNames;
-		if ([...openFields].some((f) => !known.has(f))) {
-			openFields = new Set([...openFields].filter((f) => known.has(f)));
-			return;
-		}
-		const openList = [...openFields];
+		const openList = eligibleOpen;
+		const open = new Set(openList);
 		const desiredKeys = new Map(openList.map((f) => [f, fieldCacheKey(id, f)]));
 
 		for (const [f, entry] of valuesByField) {
-			if (!openFields.has(f) || entry.key !== desiredKeys.get(f)) valuesByField.delete(f);
+			if (!open.has(f) || entry.key !== desiredKeys.get(f)) valuesByField.delete(f);
 		}
 		// An open field's spinner outlives this run: only the fetch that set it may clear it.
 		for (const f of loadingFields) {
-			if (!openFields.has(f)) loadingFields.delete(f);
+			if (!open.has(f)) loadingFields.delete(f);
 		}
 		// Every errored field lacks fresh values, so it is always pending below and retried.
 		errorByField.clear();
@@ -185,7 +181,6 @@
 	$effect(() => {
 		void triggerKey;
 		void store.fieldsReady;
-		void knownFieldNames;
 		const ctl = new AbortController();
 		const timer = setTimeout(() => runOrchestrator(ctl.signal), VALUES_DEBOUNCE_MS);
 		return () => {
