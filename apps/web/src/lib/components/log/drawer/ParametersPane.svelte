@@ -147,7 +147,7 @@
 						>
 							<table class="w-full table-fixed border-collapse">
 								<tbody>
-									{#each group.fields as field (field.name)}
+									{#each group.fields as field}
 										<FieldRow
 											{field}
 											onFilterFor={(f) => applyFilter(f, false)}
