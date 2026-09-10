@@ -590,6 +590,7 @@ export class SearchStore {
 			if (!this.#fieldsGuard.isCurrent(requestId)) return;
 			this.fieldsError = e instanceof Error ? e.message : 'Failed to load fields';
 			this.#schemaFields = [];
+			this.#fieldsLoadedFor = null;
 		} finally {
 			if (this.#fieldsGuard.isCurrent(requestId)) this.fieldsLoading = false;
 		}
