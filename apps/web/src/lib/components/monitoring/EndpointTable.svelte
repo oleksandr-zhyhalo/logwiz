@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { ServiceHealthEndpoint } from '$lib/api/monitoring';
 	import EmptyPanel from '$lib/components/ui/EmptyPanel.svelte';
+	import RowLimitSelector from '$lib/components/ui/RowLimitSelector.svelte';
 	import { formatDurationMs } from '$lib/utils/format';
 	import { readString, writeString } from '$lib/utils/safe-storage';
 
@@ -20,6 +21,11 @@
 		LIMITS.find((l) => String(l) === readString(STORAGE_KEY)) ?? LIMITS[0]
 	);
 	const rows = $derived(endpoints.slice(0, limit));
+
+	function selectLimit(next: number) {
+		limit = next;
+		writeString(STORAGE_KEY, String(next));
+	}
 </script>
 
 <section class="flex flex-col gap-2" aria-labelledby="endpoint-heading">
@@ -30,26 +36,7 @@
 				Ranked by total time spent handling requests in the selected range.
 			</p>
 		</div>
-		<div class="flex items-center gap-2" aria-label="Rows per page">
-			<span class="text-muted text-xs">Rows</span>
-			<div class="border-line divide-line flex divide-x overflow-hidden rounded border">
-				{#each LIMITS as option (option)}
-					<button
-						type="button"
-						class="h-7 min-w-9 px-2 text-xs tabular-nums transition-colors {limit === option
-							? 'bg-base-content text-base-100'
-							: 'text-muted hover:bg-base-200 hover:text-base-content'}"
-						aria-pressed={limit === option}
-						onclick={() => {
-							limit = option;
-							writeString(STORAGE_KEY, String(option));
-						}}
-					>
-						{option}
-					</button>
-				{/each}
-			</div>
-		</div>
+		<RowLimitSelector value={limit} options={LIMITS} onChange={selectLimit} />
 	</div>
 	{#if endpoints.length === 0}
 		<EmptyPanel title="Endpoint data unavailable">
