@@ -2,6 +2,7 @@
 	import { ChevronLeft, ChevronRight } from 'lucide-svelte';
 
 	import type { ServiceHealthServiceRow } from '$lib/api/monitoring';
+	import RowLimitSelector from '$lib/components/ui/RowLimitSelector.svelte';
 	import { formatCount, formatDurationMs, formatPercent } from '$lib/utils/format';
 	import { readString, writeString } from '$lib/utils/safe-storage';
 
@@ -40,23 +41,7 @@
 			</p>
 		</div>
 		<div class="flex flex-wrap items-center gap-3">
-			<div class="flex items-center gap-2" aria-label="Rows per page">
-				<span class="text-muted text-xs">Rows</span>
-				<div class="border-line divide-line flex divide-x overflow-hidden rounded border">
-					{#each LIMITS as option (option)}
-						<button
-							type="button"
-							class="h-7 min-w-9 px-2 text-xs tabular-nums transition-colors {limit === option
-								? 'bg-base-content text-base-100'
-								: 'text-muted hover:bg-base-200 hover:text-base-content'}"
-							aria-pressed={limit === option}
-							onclick={() => selectLimit(option)}
-						>
-							{option}
-						</button>
-					{/each}
-				</div>
-			</div>
+			<RowLimitSelector value={limit} options={LIMITS} onChange={selectLimit} />
 			{#if services.length > limit}
 				<div class="flex items-center gap-2">
 					<span class="text-muted text-xs tabular-nums">
