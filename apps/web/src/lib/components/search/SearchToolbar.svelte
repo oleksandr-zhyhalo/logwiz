@@ -172,17 +172,10 @@
 			e.preventDefault();
 			void accept(highlight);
 		} else if (e.key === 'Enter') {
-			if (!openedTrace()) commitQuery();
+			runQuery();
 		} else if (e.key === 'Escape' && suggestOpen) {
 			e.stopPropagation();
 			dismissed = true;
-		}
-	}
-
-	function commitQuery() {
-		dismissed = true;
-		if (queryInput !== store.query) {
-			store.runQuery(queryInput);
 		}
 	}
 
@@ -191,13 +184,17 @@
 	 * no log field. Only on Enter or Run — blur no longer commits, and navigating away from a click would
 	 * surprise. `isTraceId` rejects the all-zeros id, so OTLP's null trace id still falls through.
 	 */
-	function openedTrace(): boolean {
+	function runQuery() {
 		const raw = queryInput.trim().toLowerCase();
-		if (!isTraceId(raw)) return false;
-		queryInput = '';
 		dismissed = true;
-		void goto(traceDetailHref(raw, { index: store.selectedIndex, returnTo: page.url }));
-		return true;
+		if (isTraceId(raw)) {
+			queryInput = '';
+			void goto(traceDetailHref(raw, { index: store.selectedIndex, returnTo: page.url }));
+			return;
+		}
+		if (queryInput !== store.query) {
+			store.runQuery(queryInput);
+		}
 	}
 
 	function shareLink() {
@@ -277,9 +274,7 @@
 			onmousedown={(e) => {
 				e.preventDefault();
 			}}
-			onclick={() => {
-				if (!openedTrace()) commitQuery();
-			}}
+			onclick={runQuery}
 		>
 			<Play class="h-3.5 w-3.5" />
 			Run
